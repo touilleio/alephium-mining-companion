@@ -9,6 +9,7 @@ import (
 	"github.com/sqooba/go-common/version"
 	"github.com/touilleio/alephium-go-client"
 	"math/big"
+	"math/rand"
 	"net/http"
 	"time"
 )
@@ -45,6 +46,8 @@ func main() {
 	log.Printf("Commit     : %s", version.GitCommit)
 	log.Printf("Build date : %s", version.BuildDate)
 	log.Printf("OSarch     : %s", version.OsArch)
+
+	rand.Seed(time.Now().UnixNano())
 
 	var env envConfig
 	if err := envconfig.Process("", &env); err != nil {
@@ -142,7 +145,7 @@ func main() {
 	if env.TransferAddress != "" {
 
 		log.Infof("We will transfer to %s the mining reward every %s.", env.TransferAddress, env.TransferFrequency)
-		
+
 		for range time.Tick(env.TransferFrequency) {
 			err = transfer(alephiumClient, wallet.Name, env.WalletPassword,
 				env.TransferAddress, env.TransferMaxAmount, metrics)
@@ -164,22 +167,22 @@ func getAmount(address string, balances []alephium.AddressBalance) string {
 	return ""
 }
 
-var OneALP       =   "1000000000000000000"
-var TwoALP       =   "2000000000000000000"
-var TenALP       =  "10000000000000000000"
-var HundredALP   = "100000000000000000000"
+var OneALP      =   "1000000000000000000"
+var TwoALP      =   "2000000000000000000"
+var TenALP      =  "10000000000000000000"
+var HundredALP  = "100000000000000000000"
 var ThousandALP = "1000000000000000000000"
+var two         = big.NewInt(2)
 
 func roundAmount(amount string, txAmount string) string {
-
 	balance, ok := new(big.Int).SetString(amount, 10)
 	if !ok {
 		return  ""
 	}
 	limit, _ := new(big.Int).SetString(TenALP, 10)
-	limit = limit.Neg(limit)
-	balance.Add(balance, limit)
 	if balance.Cmp(limit) > 0 {
+		limit = limit.Div(limit, two).Neg(limit)
+		balance.Add(balance, limit)
 		alp, _ := new(big.Int).SetString(txAmount, 10)
 		if balance.Cmp(alp) > 0 {
 			return alp.Text(10)
@@ -189,14 +192,10 @@ func roundAmount(amount string, txAmount string) string {
 	return ""
 }
 
-func getNonActiveAddresses(walletAddresses alephium.WalletAddresses) []string {
-	nonActiveAddresses := make([]string, 0, len(walletAddresses.Addresses) - 1)
-	for _, wa := range walletAddresses.Addresses {
-		if wa != walletAddresses.ActiveAddress {
-			nonActiveAddresses = append(nonActiveAddresses, wa)
-		}
-	}
-	return nonActiveAddresses
+func getAddressesInRandomOrder(walletAddresses alephium.WalletAddresses) []string {
+	a := walletAddresses.Addresses
+	rand.Shuffle(len(a), func(i, j int) { a[i], a[j] = a[j], a[i] })
+	return a
 }
 
 func hasSameAddresses(minerAddresses alephium.MinersAddresses, walletAddresses alephium.WalletAddresses) bool {
@@ -222,7 +221,7 @@ func hasSameAddresses(minerAddresses alephium.MinersAddresses, walletAddresses a
 func createWallet(alephiumClient *alephium.AlephiumClient, walletName string, walletPassword string,
 	walletMnemonic string, walletMnemonicPassphrase string, printMnemonic bool) (alephium.WalletInfo, error) {
 
-	log.Infof("Wallet %s not found, creating or restoring it now.")
+	log.Infof("Wallet %s not found, creating or restoring it now.", walletName)
 
 	var wallet alephium.WalletInfo
 
@@ -230,7 +229,7 @@ func createWallet(alephiumClient *alephium.AlephiumClient, walletName string, wa
 		restoredWallet, err := alephiumClient.RestoreWallet(walletPassword, walletMnemonic,
 			walletName, true, walletMnemonicPassphrase)
 		if err != nil {
-			log.Debugf("Got an error calling wallet restore endpoint %s. Err = %v", alephiumClient, err)
+			log.Debugf("Got an error calling wallet restore endpoint %v. Err = %v", alephiumClient, err)
 			return wallet, err
 		}
 
@@ -243,7 +242,7 @@ func createWallet(alephiumClient *alephium.AlephiumClient, walletName string, wa
 		createdWallet, err := alephiumClient.CreateWallet(walletName, walletPassword,
 			true, walletMnemonicPassphrase)
 		if err != nil {
-			log.Debugf("Got an error calling wallet create endpoint %s. Err = %v", alephiumClient, err)
+			log.Debugf("Got an error calling wallet create endpoint %v. Err = %v", alephiumClient, err)
 			return wallet, err
 		}
 		if printMnemonic {
@@ -309,21 +308,7 @@ func transfer(alephiumClient *alephium.AlephiumClient, walletName string, wallet
 		return err
 	}
 
-	amount := getAmount(walletAddresses.ActiveAddress, walletBalances.Balances)
-	if amount != "" {
-		roundAmount := roundAmount(amount, transferMaxAmount)
-		log.Debugf("%s, %s, %s", walletAddresses.ActiveAddress, amount, roundAmount)
-		if roundAmount != "" {
-			tx, err := alephiumClient.Transfer(wallet.Name, transferAddress, roundAmount)
-			if err != nil {
-				log.Debugf("Got an error calling transfer. Err = %v", err)
-				return err
-			}
-			log.Debugf("New tx %s,%d->%d of %s from %s to %s", tx.TransactionId, tx.FromGroup, tx.ToGroup,
-				roundAmount, walletAddresses.ActiveAddress, transferAddress)
-		}
-	}
-	for _, address := range getNonActiveAddresses(walletAddresses) {
+	for _, address := range getAddressesInRandomOrder(walletAddresses) {
 
 		ok, err := alephiumClient.ChangeActiveAddress(wallet.Name, address)
 		if err != nil {
@@ -334,6 +319,7 @@ func transfer(alephiumClient *alephium.AlephiumClient, walletName string, wallet
 			log.Warnf("Got a false while calling change active address. Not sure what this means yet...")
 		}
 		amount := getAmount(address, walletBalances.Balances)
+		log.Debugf("address %s, amount %s", address, amount)
 		if amount != "" {
 			roundAmount := roundAmount(amount, transferMaxAmount)
 			log.Debugf("%s, %s, %s", address, amount, roundAmount)
