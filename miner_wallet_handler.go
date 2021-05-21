@@ -6,28 +6,28 @@ import (
 	"math/rand"
 )
 
-type minerWalletHandler struct {
-	alephiumClient *alephium.AlephiumClient
-	walletName string
-	walletPassword string
-	walletMnemonic string
+type miningHandler struct {
+	alephiumClient           *alephium.AlephiumClient
+	walletName               string
+	walletPassword           string
+	walletMnemonic           string
 	walletMnemonicPassphrase string
-	printMnemonic bool
-	log *logrus.Logger
+	printMnemonic            bool
+	log                      *logrus.Logger
 }
 
-func newMinerWalletHandler(alephiumClient *alephium.AlephiumClient, walletName string, walletPassword string,
+func newMiningHandler(alephiumClient *alephium.AlephiumClient, walletName string, walletPassword string,
 	walletMnemonic string, walletMnemonicPassphrase string, printMnemonic bool,
-	log *logrus.Logger) (*minerWalletHandler, error) {
+	log *logrus.Logger) (*miningHandler, error) {
 
-	handler := &minerWalletHandler{
-		alephiumClient: alephiumClient,
-		walletName: walletName,
-		walletPassword: walletPassword,
-		walletMnemonic: walletMnemonic,
+	handler := &miningHandler{
+		alephiumClient:           alephiumClient,
+		walletName:               walletName,
+		walletPassword:           walletPassword,
+		walletMnemonic:           walletMnemonic,
 		walletMnemonicPassphrase: walletMnemonicPassphrase,
-		printMnemonic: printMnemonic,
-		log: log,
+		printMnemonic:            printMnemonic,
+		log:                      log,
 	}
 
 	return handler, nil
@@ -59,7 +59,7 @@ func hasSameAddresses(minerAddresses alephium.MinersAddresses, walletAddresses a
 	return true
 }
 
-func (h *minerWalletHandler) createAndUnlockWallet() (alephium.WalletInfo, error) {
+func (h *miningHandler) createAndUnlockWallet() (alephium.WalletInfo, error) {
 
 	var wallet alephium.WalletInfo
 
@@ -127,7 +127,7 @@ func (h *minerWalletHandler) createAndUnlockWallet() (alephium.WalletInfo, error
 	return wallet, nil
 }
 
-func (h *minerWalletHandler) updateMinersAddresses() error {
+func (h *miningHandler) updateMinersAddresses() error {
 	minerAddresses, err := h.alephiumClient.GetMinersAddresses()
 	if err != nil {
 		h.log.Debugf("Got an error calling miners addresses. Err = %v", err)
@@ -145,5 +145,27 @@ func (h *minerWalletHandler) updateMinersAddresses() error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (h *miningHandler) waitForNodeInSyncAndStartMining() error {
+
+	err := h.alephiumClient.WaitUntilSyncedWithAtLeastOnePeer()
+	if err != nil {
+		h.log.Debugf("Got an error waiting for the node to be in sync with peers. Err = %v", err)
+		return err
+	}
+
+	h.log.Infof("Node %s is ready to mine, starting the mining now.", h.alephiumClient)
+
+	nodeInfo, err := h.alephiumClient.GetNodeInfos()
+	if !nodeInfo.IsMining {
+		_, err = h.alephiumClient.StartMining()
+		if err != nil {
+			h.log.Debugf("Got an error starting the mining. Err = %v", err)
+			return err
+		}
+	}
+
 	return nil
 }

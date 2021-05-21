@@ -8,7 +8,7 @@ import (
 )
 
 type metrics struct {
-	transferRun    prometheus.Counter
+	transferRun prometheus.Counter
 }
 
 func initPrometheus(env envConfig, mux *http.ServeMux) *metrics {

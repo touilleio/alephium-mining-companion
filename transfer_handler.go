@@ -8,29 +8,28 @@ import (
 )
 
 type transferHandler struct {
-
-	alephiumClient *alephium.AlephiumClient
-	walletName string
-	walletPassword string
-	transferAddress string
+	alephiumClient    *alephium.AlephiumClient
+	walletName        string
+	walletPassword    string
+	transferAddress   string
 	transferMaxAmount string
 	transferFrequency time.Duration
-	metrics *metrics
-	log *logrus.Logger
+	metrics           *metrics
+	log               *logrus.Logger
 }
 
 func newTransferHandler(alephiumClient *alephium.AlephiumClient, walletName string, walletPassword string,
 	transferAddress string, transferMaxAmount string, transferFrequency time.Duration, metrics *metrics, log *logrus.Logger) (*transferHandler, error) {
 
 	handler := &transferHandler{
-		alephiumClient: alephiumClient,
-		walletName: walletName,
-		walletPassword: walletPassword,
-		transferAddress: transferAddress,
+		alephiumClient:    alephiumClient,
+		walletName:        walletName,
+		walletPassword:    walletPassword,
+		transferAddress:   transferAddress,
 		transferMaxAmount: transferMaxAmount,
 		transferFrequency: transferFrequency,
-		metrics: metrics,
-		log: log,
+		metrics:           metrics,
+		log:               log,
 	}
 
 	return handler, nil
@@ -105,7 +104,6 @@ func (h *transferHandler) transfer() error {
 	return nil
 }
 
-
 func getAmount(address string, balances []alephium.AddressBalance) string {
 	for _, b := range balances {
 		if b.Address == address {
@@ -116,18 +114,18 @@ func getAmount(address string, balances []alephium.AddressBalance) string {
 }
 
 var (
-	OneALP      =   "1000000000000000000"
-    TwoALP      =   "2000000000000000000"
-    TenALP      =  "10000000000000000000"
-    HundredALP  = "100000000000000000000"
-    ThousandALP = "1000000000000000000000"
-    two         = big.NewInt(2)
+	OneALP      = "1000000000000000000"
+	TwoALP      = "2000000000000000000"
+	TenALP      = "10000000000000000000"
+	HundredALP  = "100000000000000000000"
+	ThousandALP = "1000000000000000000000"
+	two         = big.NewInt(2)
 )
 
 func roundAmount(amount string, txAmount string) string {
 	balance, ok := new(big.Int).SetString(amount, 10)
 	if !ok {
-		return  ""
+		return ""
 	}
 	limit, _ := new(big.Int).SetString(TenALP, 10)
 	if balance.Cmp(limit) > 0 {
@@ -141,4 +139,3 @@ func roundAmount(amount string, txAmount string) string {
 	}
 	return ""
 }
-

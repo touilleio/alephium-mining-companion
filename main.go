@@ -90,34 +90,27 @@ func main() {
 		log.Fatalf("Got an error instantiating alephium client on %s. Err = %v", env.AlephiumEndpoint, err)
 	}
 
-	minerWalletHandler, err := newMinerWalletHandler(alephiumClient, env.WalletName, env.WalletPassword,
+	miningHandler, err := newMiningHandler(alephiumClient, env.WalletName, env.WalletPassword,
 		env.WalletMnemonic, env.WalletMnemonicPassphrase, env.PrintMnemonic, log)
 	if err != nil {
 		log.Fatalf("Got an error while creating the wallet handler. Err = %v", err)
 	}
 
-	wallet, err := minerWalletHandler.createAndUnlockWallet()
+	wallet, err := miningHandler.createAndUnlockWallet()
 	if err != nil {
 		log.Fatalf("Got an error while creating and/or unlocking the wallet %s. Err = %v", env.WalletName, err)
 	}
 
-	err = minerWalletHandler.updateMinersAddresses()
+	err = miningHandler.updateMinersAddresses()
 	if err != nil {
 		log.Fatalf("Got an error while updating miners addresses. Err = %v", err)
 	}
 
 	log.Infof("Mining wallet %s is ready to be used, now waiting for the node to become in sync if needed.", wallet.Name)
 
-	err = alephiumClient.WaitUntilSyncedWithAtLeastOnePeer()
+	err = miningHandler.waitForNodeInSyncAndStartMining()
 	if err != nil {
-		log.Fatalf("Got an error waiting for the node to be in sync with peers. Err = %v", err)
-	}
-
-	log.Infof("Node %s is ready to mine, starting the mining now.", env.AlephiumEndpoint)
-
-	_, err = alephiumClient.StartMining()
-	if err != nil {
-		log.Fatalf("Got an error starting the mining. Err = %v", err)
+		log.Fatalf("Got an error while waiting for the node to be in sync with peers. Err = %v", err)
 	}
 
 	if env.TransferAddress != "" {
