@@ -51,6 +51,6 @@ services:
 | `WALLET_MNEMONIC` | | (optional) Mnemonic to restore (create) the wallet if it does not exist. Random mnemonic will be generated if not set |
 | `WALLET_MNEMONIC_PASSPHRASE` | | (optional) A passphrase associated with the mnemonic, if any |
 | `TRANSFER_MAX_AMOUNT` | 50000000000000000000 (50 ALP) | Max amount to transfer at once. |
-| `TRANSFER_ADDRESS` | | Address to transfer the mining rewards to. Double check you're sending the funds to the right address !! |
+| `TRANSFER_ADDRESS` | | Address to transfer the mining rewards to. If none provided, no transfer is performed. Double check you're sending the funds to the right address !! |
 | `TRANSFER_FREQUENCY` | `15m` | Frequency at which funds are transferred |
 | `PRINT_MNEMONIC` | `true` | If true and a wallet is created without pre-set mnemonic (`WALLET_MNEMONIC` option above), the randomly generate mnemonic is printed out. This is a sensitive information, use it with caution! |

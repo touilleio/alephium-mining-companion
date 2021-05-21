@@ -69,8 +69,7 @@ func main() {
 		logging.SetRemoteLogLevelAndExit(log, env.Port, *setLogLevel)
 	}
 
-	if env.WalletName == "" || env.WalletPassword == "" ||
-		env.TransferAddress == "" {
+	if env.WalletName == "" || env.WalletPassword == "" {
 		log.Fatalf("Some mandatory configuration parameters are missing. Please correct the config and retry.")
 	}
 
@@ -135,6 +134,8 @@ func main() {
 		if err != nil {
 			log.Fatalf("Got an error while handling the transfer. Err = %v", err)
 		}
+	} else {
+		log.Infof("No transfer address configure, no problem, job is done.")
 	}
 
 	log.Infof("All good, stopping now.")

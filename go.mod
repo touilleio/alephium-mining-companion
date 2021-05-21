@@ -9,6 +9,6 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/sqooba/go-common v0.0.0-20210312063917-35b2ebfb97ab
 	github.com/stretchr/testify v1.7.0
-	github.com/touilleio/alephium-go-client v0.0.0-20210515140745-aa580794179b
-	golang.org/x/sys v0.0.0-20210514084401-e8d321eab015 // indirect
+	github.com/touilleio/alephium-go-client v0.0.0-20210521144428-c6827f8ca175
+	golang.org/x/sys v0.0.0-20210521090106-6ca3eb03dfc2 // indirect
 )
