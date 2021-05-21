@@ -8,7 +8,6 @@ import (
 	"github.com/sqooba/go-common/logging"
 	"github.com/sqooba/go-common/version"
 	"github.com/touilleio/alephium-go-client"
-	"math/big"
 	"math/rand"
 	"net/http"
 	"time"
@@ -92,43 +91,23 @@ func main() {
 		log.Fatalf("Got an error instantiating alephium client on %s. Err = %v", env.AlephiumEndpoint, err)
 	}
 
-	var wallet alephium.WalletInfo
-	var walletFound bool
-	wallets, err := alephiumClient.GetWallets()
+	minerWalletHandler, err := newMinerWalletHandler(alephiumClient, env.WalletName, env.WalletPassword,
+		env.WalletMnemonic, env.WalletMnemonicPassphrase, env.PrintMnemonic, log)
 	if err != nil {
-		log.Fatalf("Got an error calling wallets endpoint %s. Err = %v", env.AlephiumEndpoint, err)
-	}
-	for _, w := range wallets {
-		if w.Name == env.WalletName {
-			wallet = w
-			walletFound = true
-			break
-		}
-	}
-	if !walletFound {
-		wallet, err = createWallet(alephiumClient, env.WalletName, env.WalletPassword,
-			env.WalletMnemonic, env.WalletMnemonicPassphrase, env.PrintMnemonic)
-		if err != nil {
-			log.Fatalf("Got an error while creating the wallet. Err = %v", err)
-		}
+		log.Fatalf("Got an error while creating the wallet handler. Err = %v", err)
 	}
 
-	if wallet.Locked {
-		ok, err := alephiumClient.UnlockWallet(wallet.Name, env.WalletPassword)
-		if err != nil {
-			log.Fatalf("Got an error while unlocking the wallet %s. Err = %v", wallet.Name, err)
-		}
-		if !ok {
-			log.Fatalf("Unable to unlock the wallet %s, please make sure the provided password is correct and retry.", wallet.Name)
-		}
+	wallet, err := minerWalletHandler.createAndUnlockWallet()
+	if err != nil {
+		log.Fatalf("Got an error while creating and/or unlocking the wallet %s. Err = %v", env.WalletName, err)
 	}
 
-	err = updateMinersAddresses(alephiumClient, wallet.Name)
+	err = minerWalletHandler.updateMinersAddresses()
 	if err != nil {
 		log.Fatalf("Got an error while updating miners addresses. Err = %v", err)
 	}
 
-	log.Infof("Mining wallet %s is ready to be used, now waiting for the node to become in sync.", wallet.Name)
+	log.Infof("Mining wallet %s is ready to be used, now waiting for the node to become in sync if needed.", wallet.Name)
 
 	err = alephiumClient.WaitUntilSyncedWithAtLeastOnePeer()
 	if err != nil {
@@ -144,195 +123,19 @@ func main() {
 
 	if env.TransferAddress != "" {
 
+		transferHandler, err := newTransferHandler(alephiumClient, wallet.Name, env.WalletPassword,
+			env.TransferAddress, env.TransferMaxAmount, env.TransferFrequency, metrics, log)
+		if err != nil {
+			log.Fatalf("Got an error while instanciating the transfer handler. Err = %v", err)
+		}
+
 		log.Infof("We will transfer to %s the mining reward every %s.", env.TransferAddress, env.TransferFrequency)
 
-		for range time.Tick(env.TransferFrequency) {
-			err = transfer(alephiumClient, wallet.Name, env.WalletPassword,
-				env.TransferAddress, env.TransferMaxAmount, metrics)
-			if err != nil {
-				log.Fatalf("Got an error while transferring some amount #2. Err = %v", err)
-			}
+		err = transferHandler.handle()
+		if err != nil {
+			log.Fatalf("Got an error while handling the transfer. Err = %v", err)
 		}
 	}
 
 	log.Infof("All good, stopping now.")
-}
-
-func getAmount(address string, balances []alephium.AddressBalance) string {
-	for _, b := range balances {
-		if b.Address == address {
-			return b.Balance
-		}
-	}
-	return ""
-}
-
-var OneALP      =   "1000000000000000000"
-var TwoALP      =   "2000000000000000000"
-var TenALP      =  "10000000000000000000"
-var HundredALP  = "100000000000000000000"
-var ThousandALP = "1000000000000000000000"
-var two         = big.NewInt(2)
-
-func roundAmount(amount string, txAmount string) string {
-	balance, ok := new(big.Int).SetString(amount, 10)
-	if !ok {
-		return  ""
-	}
-	limit, _ := new(big.Int).SetString(TenALP, 10)
-	if balance.Cmp(limit) > 0 {
-		limit = limit.Div(limit, two).Neg(limit)
-		balance.Add(balance, limit)
-		alp, _ := new(big.Int).SetString(txAmount, 10)
-		if balance.Cmp(alp) > 0 {
-			return alp.Text(10)
-		}
-		return balance.Text(10)
-	}
-	return ""
-}
-
-func getAddressesInRandomOrder(walletAddresses alephium.WalletAddresses) []string {
-	a := walletAddresses.Addresses
-	rand.Shuffle(len(a), func(i, j int) { a[i], a[j] = a[j], a[i] })
-	return a
-}
-
-func hasSameAddresses(minerAddresses alephium.MinersAddresses, walletAddresses alephium.WalletAddresses) bool {
-
-	if len(minerAddresses.Addresses) <= 1 || len(minerAddresses.Addresses) != len(walletAddresses.Addresses) {
-		return false
-	}
-
-	for _, minerAddress := range minerAddresses.Addresses {
-		found := false
-		for _, walletAddress := range walletAddresses.Addresses {
-			if walletAddress == minerAddress {
-				found = true
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-	return true
-}
-
-func createWallet(alephiumClient *alephium.AlephiumClient, walletName string, walletPassword string,
-	walletMnemonic string, walletMnemonicPassphrase string, printMnemonic bool) (alephium.WalletInfo, error) {
-
-	log.Infof("Wallet %s not found, creating or restoring it now.", walletName)
-
-	var wallet alephium.WalletInfo
-
-	if walletMnemonic != "" {
-		restoredWallet, err := alephiumClient.RestoreWallet(walletPassword, walletMnemonic,
-			walletName, true, walletMnemonicPassphrase)
-		if err != nil {
-			log.Debugf("Got an error calling wallet restore endpoint %v. Err = %v", alephiumClient, err)
-			return wallet, err
-		}
-
-		wallet, err = alephiumClient.GetWalletStatus(restoredWallet.Name)
-		if err != nil {
-			log.Debugf("Got an error calling wallet status after a restore, wallet restoration probably didn't work... Err = %v", err)
-			return wallet, err
-		}
-	} else {
-		createdWallet, err := alephiumClient.CreateWallet(walletName, walletPassword,
-			true, walletMnemonicPassphrase)
-		if err != nil {
-			log.Debugf("Got an error calling wallet create endpoint %v. Err = %v", alephiumClient, err)
-			return wallet, err
-		}
-		if printMnemonic {
-			log.Infof("[SENSITIVE] The mnemonic of the newly created wallet is %s. This mnemonic will never be printed again, make sure you write them down somewhere!",
-				createdWallet.Mnemonic)
-		}
-		wallet, err = alephiumClient.GetWalletStatus(createdWallet.Name)
-		if err != nil {
-			log.Debugf("Got an error calling wallet status after a create, wallet creation probably didn't work... Err = %v", err)
-			return wallet, err
-		}
-	}
-	return wallet, nil
-}
-
-func updateMinersAddresses(alephiumClient *alephium.AlephiumClient, walletName string) error {
-	minerAddresses, err := alephiumClient.GetMinersAddresses()
-	if err != nil {
-		log.Debugf("Got an error calling miners addresses. Err = %v", err)
-		return err
-	}
-	walletAddresses, err := alephiumClient.GetWalletAddresses(walletName)
-	if err != nil {
-		log.Debugf("Got an error calling wallet addresses. Err = %v", err)
-		return err
-	}
-	if !hasSameAddresses(minerAddresses, walletAddresses) {
-		err = alephiumClient.UpdateMinersAddresses(walletAddresses.Addresses)
-		if err != nil {
-			log.Debugf("Got an error calling update miners addresses. Err = %v", err)
-			return err
-		}
-	}
-	return nil
-}
-
-func transfer(alephiumClient *alephium.AlephiumClient, walletName string, walletPassword string,
-	transferAddress string, transferMaxAmount string, metrics *metrics) error {
-
-	metrics.transferRun.Inc()
-
-	wallet, err := alephiumClient.GetWalletStatus(walletName)
-	if err != nil {
-		log.Debugf("Got an error calling wallet status after a restore, wallet restoration probably didn't work... Err = %v", err)
-		return err
-	}
-	if wallet.Locked {
-		_, err := alephiumClient.UnlockWallet(wallet.Name, walletPassword)
-		if err != nil {
-			log.Debugf("Got an error calling wallet unlock. Err = %v", err)
-			return err
-		}
-	}
-
-	walletAddresses, err := alephiumClient.GetWalletAddresses(wallet.Name)
-	if err != nil {
-		log.Debugf("Got an error while getting wallet addresses. Err = %v", err)
-		return err
-	}
-	walletBalances, err := alephiumClient.GetWalletBalances(wallet.Name)
-	if err != nil {
-		log.Debugf("Got an error while getting wallet balances. Err = %v", err)
-		return err
-	}
-
-	for _, address := range getAddressesInRandomOrder(walletAddresses) {
-
-		ok, err := alephiumClient.ChangeActiveAddress(wallet.Name, address)
-		if err != nil {
-			log.Debugf("Got an error calling change active address. Err = %v", err)
-			return err
-		}
-		if !ok {
-			log.Warnf("Got a false while calling change active address. Not sure what this means yet...")
-		}
-		amount := getAmount(address, walletBalances.Balances)
-		log.Debugf("address %s, amount %s", address, amount)
-		if amount != "" {
-			roundAmount := roundAmount(amount, transferMaxAmount)
-			log.Debugf("%s, %s, %s", address, amount, roundAmount)
-			if roundAmount != "" {
-				tx, err := alephiumClient.Transfer(wallet.Name, transferAddress, roundAmount)
-				if err != nil {
-					log.Debugf("Got an error calling transfer. Err = %v", err)
-					return err
-				}
-				log.Debugf("New tx %s,%d->%d of %s from %s to %s", tx.TransactionId, tx.FromGroup, tx.ToGroup,
-					roundAmount, address, transferAddress)
-			}
-		}
-	}
-	return nil
 }
