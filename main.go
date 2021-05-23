@@ -113,6 +113,9 @@ func main() {
 		log.Fatalf("Got an error while waiting for the node to be in sync with peers. Err = %v", err)
 	}
 
+	go miningHandler.ensureMiningWalletAndNodeMining()
+
+
 	if env.TransferAddress != "" {
 
 		transferHandler, err := newTransferHandler(alephiumClient, wallet.Name, env.WalletPassword,

@@ -4,6 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/touilleio/alephium-go-client"
 	"math/rand"
+	"time"
 )
 
 type miningHandler struct {
@@ -133,12 +134,17 @@ func (h *miningHandler) updateMinersAddresses() error {
 		h.log.Debugf("Got an error calling miners addresses. Err = %v", err)
 		return err
 	}
+
 	walletAddresses, err := h.alephiumClient.GetWalletAddresses(h.walletName)
 	if err != nil {
 		h.log.Debugf("Got an error calling wallet addresses. Err = %v", err)
 		return err
 	}
+
 	if !hasSameAddresses(minerAddresses, walletAddresses) {
+		h.log.Debugf("Current miner addresses %v", minerAddresses)
+		h.log.Debugf("Mining wallet addresses %v", walletAddresses)
+
 		err = h.alephiumClient.UpdateMinersAddresses(walletAddresses.Addresses)
 		if err != nil {
 			h.log.Debugf("Got an error calling update miners addresses. Err = %v", err)
@@ -156,16 +162,37 @@ func (h *miningHandler) waitForNodeInSyncAndStartMining() error {
 		return err
 	}
 
-	h.log.Infof("Node %s is ready to mine, starting the mining now.", h.alephiumClient)
-
 	nodeInfo, err := h.alephiumClient.GetNodeInfos()
 	if !nodeInfo.IsMining {
+		h.log.Infof("Node %s is ready to mine, starting the mining now.", h.alephiumClient)
+
 		_, err = h.alephiumClient.StartMining()
 		if err != nil {
 			h.log.Debugf("Got an error starting the mining. Err = %v", err)
 			return err
 		}
+	} else {
+		h.log.Debugf("Node is already mining, doing nothing.")
+
 	}
 
+	return nil
+}
+
+// ensureMiningWalletAndNodeMining
+func (h *miningHandler) ensureMiningWalletAndNodeMining() error {
+	for range time.Tick(5*time.Minute) {
+		err := h.updateMinersAddresses()
+		if err != nil {
+			h.log.Fatalf("Got an error while updating miners addresses. Err = %v", err)
+			return err
+		}
+
+		err = h.waitForNodeInSyncAndStartMining()
+		if err != nil {
+			h.log.Fatalf("Got an error while waiting for the node to be in sync with peers. Err = %v", err)
+			return err
+		}
+	}
 	return nil
 }

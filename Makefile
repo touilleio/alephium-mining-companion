@@ -1,6 +1,5 @@
 
 VERSION=v1.0.0
-GOOS=linux
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
@@ -26,21 +25,27 @@ clean:
 lint:
 	$(GOLINT) ...
 
-build:
-	GOOS=${GOOS} $(GOBUILD) \
-		-o ${BINARY_NAME} .
+build: package
 
 package:
-	docker build -f Dockerfile \
-	  -t ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION) \
-	  -t ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION_MAJOR).$(VERSION_MINOR) \
-	  -t ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION_MAJOR) \
-	  .
+	docker buildx build -f Dockerfile \
+		--platform linux/amd64 \
+		--build-arg VERSION=$(VERSION) \
+		-t ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION) \
+		-t ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION_MAJOR).$(VERSION_MINOR) \
+		-t ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION_MAJOR) \
+		--load --no-cache \
+		.
 
 test:
 	go test ./...
 
 release:
-	docker push ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION)
-	docker push ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION_MAJOR).$(VERSION_MINOR)
-	docker push ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION_MAJOR)
+	docker buildx build -f Dockerfile \
+		--platform linux/amd64,linux/arm64,linux/arm/v7 \
+		--build-arg VERSION=$(VERSION) \
+		-t ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION) \
+		-t ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION_MAJOR).$(VERSION_MINOR) \
+		-t ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION_MAJOR) \
+		--push \
+		.
