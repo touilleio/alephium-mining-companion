@@ -8,7 +8,7 @@ import (
 )
 
 type miningHandler struct {
-	alephiumClient           *alephium.AlephiumClient
+	alephiumClient           *alephium.Client
 	walletName               string
 	walletPassword           string
 	walletMnemonic           string
@@ -17,7 +17,7 @@ type miningHandler struct {
 	log                      *logrus.Logger
 }
 
-func newMiningHandler(alephiumClient *alephium.AlephiumClient, walletName string, walletPassword string,
+func newMiningHandler(alephiumClient *alephium.Client, walletName string, walletPassword string,
 	walletMnemonic string, walletMnemonicPassphrase string, printMnemonic bool,
 	log *logrus.Logger) (*miningHandler, error) {
 

@@ -8,7 +8,7 @@ import (
 )
 
 type transferHandler struct {
-	alephiumClient    *alephium.AlephiumClient
+	alephiumClient    *alephium.Client
 	walletName        string
 	walletPassword    string
 	transferAddress   string
@@ -18,7 +18,7 @@ type transferHandler struct {
 	log               *logrus.Logger
 }
 
-func newTransferHandler(alephiumClient *alephium.AlephiumClient, walletName string, walletPassword string,
+func newTransferHandler(alephiumClient *alephium.Client, walletName string, walletPassword string,
 	transferAddress string, transferMaxAmount string, transferFrequency time.Duration, metrics *metrics, log *logrus.Logger) (*transferHandler, error) {
 
 	handler := &transferHandler{
