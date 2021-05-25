@@ -24,8 +24,8 @@ type envConfig struct {
 	LogLevel string `envconfig:"LOG_LEVEL" default:"debug"`
 
 	AlephiumEndpoint         string        `envconfig:"ALEPHIUM_ENDPOINT" default:"http://alephium:12973"`
-	WalletName               string        `envconfig:"WALLET_NAME" default:""`
-	WalletPassword           string        `envconfig:"WALLET_PASSWORD" default:""`
+	WalletName               string        `envconfig:"WALLET_NAME" default:"mining-sidecar-wallet-1"`
+	WalletPassword           string        `envconfig:"WALLET_PASSWORD" default:"Default-Password-1234"`
 	WalletMnemonic           string        `envconfig:"WALLET_MNEMONIC" default:""`
 	WalletMnemonicPassphrase string        `envconfig:"WALLET_MNEMONIC_PASSPHRASE" default:""`
 	TransferMaxAmount        string        `envconfig:"TRANSFER_MAX_AMOUNT" default:"50000000000000000000"`
@@ -72,6 +72,9 @@ func main() {
 	if env.WalletName == "" || env.WalletPassword == "" {
 		log.Fatalf("Some mandatory configuration parameters are missing. Please correct the config and retry.")
 	}
+	if env.WalletPassword == "Default-Password-1234" {
+		log.Warnf("Your using default password. This is not recommanded for production use.")
+	}
 
 	// Register health checks and metrics
 	initHealthChecks(env, http.DefaultServeMux)
@@ -115,9 +118,7 @@ func main() {
 
 	go miningHandler.ensureMiningWalletAndNodeMining()
 
-
 	if env.TransferAddress != "" {
-
 		transferHandler, err := newTransferHandler(alephiumClient, wallet.Name, env.WalletPassword,
 			env.TransferAddress, env.TransferMaxAmount, env.TransferFrequency, metrics, log)
 		if err != nil {

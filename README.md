@@ -20,6 +20,8 @@ and particularly have REST connectivity to it (default port 12973)
 
 # Configuration
 
+## Docker compose
+
 Docker-compose is a good way of running the side, assuming the
 [Alephium node is also running in docker](https://touille.io/posts/how-to-run-alephium-full-node/).
 
@@ -46,11 +48,23 @@ services:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `ALEPHIUM_ENDPOINT` | `http://alephium:12973` | REST URI of your Alephium node. Mind localhost in a docker container point to the docker container, not the host itself. |
-| `WALLET_NAME` | | Name of the miner wallet |
-| `WALLET_PASSWORD` | | Password to unlock the miner wallet |
-| `WALLET_MNEMONIC` | | (optional) Mnemonic to restore (create) the wallet if it does not exist. Random mnemonic will be generated if not set |
-| `WALLET_MNEMONIC_PASSPHRASE` | | (optional) A passphrase associated with the mnemonic, if any |
-| `TRANSFER_MAX_AMOUNT` | 50000000000000000000 (50 ALP) | Max amount to transfer at once. |
-| `TRANSFER_ADDRESS` | | Address to transfer the mining rewards to. If none provided, no transfer is performed. Double check you're sending the funds to the right address !! |
+| `WALLET_NAME` | `mining-sidecar-wallet-1` | Name of the miner wallet |
+| `WALLET_PASSWORD` | `Default-Password-1234` | Password to unlock the miner wallet |
+| `WALLET_MNEMONIC` | _optional_ | Mnemonic to restore (create) the wallet if it does not exist. Random mnemonic will be generated if not set |
+| `WALLET_MNEMONIC_PASSPHRASE` | _optional_ | A passphrase associated with the mnemonic, if any |
+| `TRANSFER_MAX_AMOUNT` | 50000000000000000000 (50 ALF) | Max amount to transfer at once. |
+| `TRANSFER_ADDRESS` | _mandatory_ | Address to transfer the mining rewards to. If none provided, no transfer is performed. Double check you're sending the funds to the right address !! |
 | `TRANSFER_FREQUENCY` | `15m` | Frequency at which funds are transferred |
 | `PRINT_MNEMONIC` | `true` | If true and a wallet is created without pre-set mnemonic (`WALLET_MNEMONIC` option above), the randomly generate mnemonic is printed out. This is a sensitive information, use it with caution! |
+
+## Docker
+
+```
+docker run -it --rm --link alephium:alephium -e TRANSFER_ADDRESS=T1EEFFBGYac9ZbXKscqTdfbCd4siW1Yn8YYTo9CPGT811c touilleio/alephium-mining-sidecar:v1
+```
+
+As a reminder, running a Alephium full node looks like the following:
+
+```
+docker run -it --rm --name alephium -p 12973:12973 touilleio/alephium:v0.7.7
+```
