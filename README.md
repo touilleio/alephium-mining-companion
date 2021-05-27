@@ -11,7 +11,7 @@ when enabling mining:
 3. Starts the mining automatically when the node is in sync
 4. Transfers the mining reward to another provided wallet/address
    on a fixed frequency (hourly, daily, ...). Note that the wallet
-   can be created any where as long as it's a valid Alephium address
+   can be created anywhere as long as it's a valid Alephium address
 
 Sidecar means it needs to run alongside an Alephium full node,
 and particularly have REST connectivity to it (default port 12973)
@@ -59,8 +59,10 @@ services:
 
 ## Docker
 
+Replace `T123456789012345678901234567890123456789012345` below with your own wallet address!
+
 ```
-docker run -it --rm --link alephium:alephium -e TRANSFER_ADDRESS=T1EEFFBGYac9ZbXKscqTdfbCd4siW1Yn8YYTo9CPGT811c touilleio/alephium-mining-sidecar:v1
+docker run -it --rm --link alephium:alephium -e TRANSFER_ADDRESS=T123456789012345678901234567890123456789012345 touilleio/alephium-mining-sidecar:v1
 ```
 
 As a reminder, running a Alephium full node looks like the following:
