@@ -56,6 +56,7 @@ services:
 | `TRANSFER_ADDRESS` | _mandatory_ | Address to transfer the mining rewards to. If none provided, no transfer is performed. Double check you're sending the funds to the right address !! |
 | `TRANSFER_FREQUENCY` | `15m` | Frequency at which funds are transferred |
 | `PRINT_MNEMONIC` | `true` | If true and a wallet is created without pre-set mnemonic (`WALLET_MNEMONIC` option above), the randomly generate mnemonic is printed out. This is a sensitive information, use it with caution! |
+| `IMMEDIATE_TRANSFER` | `false` | If set to true, a transfer is sent at the start of the container, without waiting for `TRANSFER_FREQUENCY` initial time |
 
 ## Docker
 
@@ -68,5 +69,5 @@ docker run -it --rm --link alephium:alephium -e TRANSFER_ADDRESS=T12345678901234
 As a reminder, running a Alephium full node looks like the following:
 
 ```
-docker run -it --rm --name alephium -p 12973:12973 touilleio/alephium:v0.7.7
+docker run -it --rm --name alephium -p 12973:12973 touilleio/alephium:v0.7.8
 ```

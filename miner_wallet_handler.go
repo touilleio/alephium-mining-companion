@@ -181,7 +181,7 @@ func (h *miningHandler) waitForNodeInSyncAndStartMining() error {
 
 // ensureMiningWalletAndNodeMining
 func (h *miningHandler) ensureMiningWalletAndNodeMining() error {
-	for range time.Tick(5*time.Minute) {
+	for range time.Tick(5 * time.Minute) {
 		err := h.updateMinersAddresses()
 		if err != nil {
 			h.log.Fatalf("Got an error while updating miners addresses. Err = %v", err)

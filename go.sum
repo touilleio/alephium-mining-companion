@@ -695,6 +695,8 @@ github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 h1:LnC5Kc
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/touilleio/alephium-go-client v0.0.0-20210525061813-3553d8db8ec4 h1:q9ZIPbcIjbAFjmkmRndRHcwV/Ri4K3CU2CVOP7CFcvA=
 github.com/touilleio/alephium-go-client v0.0.0-20210525061813-3553d8db8ec4/go.mod h1:0cYeYQ/wvb0PS2VAwH1j2/cK5SN9D5YuWU9xEmaX+s8=
+github.com/touilleio/alephium-go-client v0.0.0-20210530073150-0ecfc5398475 h1:isWQgYMm7+ACoKKFbZGdyJsGNkxLUEhrOx8SKElRihw=
+github.com/touilleio/alephium-go-client v0.0.0-20210530073150-0ecfc5398475/go.mod h1:0cYeYQ/wvb0PS2VAwH1j2/cK5SN9D5YuWU9xEmaX+s8=
 github.com/urfave/cli v0.0.0-20171014202726-7bc6a0acffa5/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=

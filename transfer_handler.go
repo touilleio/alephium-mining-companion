@@ -14,12 +14,13 @@ type transferHandler struct {
 	transferAddress   string
 	transferMaxAmount string
 	transferFrequency time.Duration
+	immediate         bool
 	metrics           *metrics
 	log               *logrus.Logger
 }
 
 func newTransferHandler(alephiumClient *alephium.Client, walletName string, walletPassword string,
-	transferAddress string, transferMaxAmount string, transferFrequency time.Duration, metrics *metrics, log *logrus.Logger) (*transferHandler, error) {
+	transferAddress string, transferMaxAmount string, transferFrequency time.Duration, immediate bool, metrics *metrics, log *logrus.Logger) (*transferHandler, error) {
 
 	handler := &transferHandler{
 		alephiumClient:    alephiumClient,
@@ -28,6 +29,7 @@ func newTransferHandler(alephiumClient *alephium.Client, walletName string, wall
 		transferAddress:   transferAddress,
 		transferMaxAmount: transferMaxAmount,
 		transferFrequency: transferFrequency,
+		immediate:         immediate,
 		metrics:           metrics,
 		log:               log,
 	}
@@ -36,10 +38,17 @@ func newTransferHandler(alephiumClient *alephium.Client, walletName string, wall
 }
 
 func (h *transferHandler) handle() error {
+	if h.immediate {
+		err := h.transfer()
+		if err != nil {
+			h.log.Debugf("Got an error while immediately transferring some amount. Err = %v", err)
+			return err
+		}
+	}
 	for range time.Tick(h.transferFrequency) {
 		err := h.transfer()
 		if err != nil {
-			h.log.Debugf("Got an error while transferring some amount #2. Err = %v", err)
+			h.log.Debugf("Got an error while transferring some amount. Err = %v", err)
 			return err
 		}
 	}

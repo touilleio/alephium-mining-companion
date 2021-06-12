@@ -31,12 +31,17 @@ type envConfig struct {
 	TransferMaxAmount        string        `envconfig:"TRANSFER_MAX_AMOUNT" default:"50000000000000000000"`
 	TransferAddress          string        `envconfig:"TRANSFER_ADDRESS" default:""`
 	TransferFrequency        time.Duration `envconfig:"TRANSFER_FREQUENCY" default:"15m"`
-	PrintMnemonic            bool          `envconfig:"PRINT_MNEMONIC" default:"true"`
+	PrintMnemonic            bool          `envconfig:"PRINT_MNEMONIC" default:"false"`
+	ImmediateTransfer        bool          `envconfig:"IMMEDIATE_TRANSFER" default:"false"`
 
 	MetricsNamespace string `envconfig:"METRICS_NAMESPACE" default:"alephium"`
 	MetricsSubsystem string `envconfig:"METRICS_SUBSYSTEM" default:"miningsidecar"`
 	MetricsPath      string `envconfig:"METRICS_PATH" default:"/metrics"`
 }
+
+const (
+	DefaultWalletPassword = "Default-Password-1234"
+)
 
 func main() {
 
@@ -50,7 +55,7 @@ func main() {
 
 	var env envConfig
 	if err := envconfig.Process("", &env); err != nil {
-		log.Printf("[ERROR] Failed to process env var: %s\n", err)
+		log.Fatalf("Failed to process env var: %s\n", err)
 		return
 	}
 
@@ -72,8 +77,8 @@ func main() {
 	if env.WalletName == "" || env.WalletPassword == "" {
 		log.Fatalf("Some mandatory configuration parameters are missing. Please correct the config and retry.")
 	}
-	if env.WalletPassword == "Default-Password-1234" {
-		log.Warnf("Your using default password. This is not recommanded for production use.")
+	if env.WalletPassword == DefaultWalletPassword {
+		log.Warnf("Your using the default password. This is not recommanded for production use.")
 	}
 
 	// Register health checks and metrics
@@ -109,7 +114,12 @@ func main() {
 		log.Fatalf("Got an error while updating miners addresses. Err = %v", err)
 	}
 
-	log.Infof("Mining wallet %s is ready to be used, now waiting for the node to become in sync if needed.", wallet.Name)
+	minerAddresses, err := alephiumClient.GetMinersAddresses()
+	if err != nil {
+		log.Fatalf("Got an error calling miners addresses. Err = %v", err)
+	}
+	log.Infof("Mining wallet %s (with addresses %v) is ready to be used, now waiting for the node to become in sync if needed.",
+		wallet.Name, minerAddresses.Addresses)
 
 	err = miningHandler.waitForNodeInSyncAndStartMining()
 	if err != nil {
@@ -120,7 +130,8 @@ func main() {
 
 	if env.TransferAddress != "" {
 		transferHandler, err := newTransferHandler(alephiumClient, wallet.Name, env.WalletPassword,
-			env.TransferAddress, env.TransferMaxAmount, env.TransferFrequency, metrics, log)
+			env.TransferAddress, env.TransferMaxAmount, env.TransferFrequency,
+			env.ImmediateTransfer, metrics, log)
 		if err != nil {
 			log.Fatalf("Got an error while instanciating the transfer handler. Err = %v", err)
 		}
