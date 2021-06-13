@@ -173,7 +173,6 @@ func (h *miningHandler) waitForNodeInSyncAndStartMining() error {
 		}
 	} else {
 		h.log.Debugf("Node is already mining, doing nothing.")
-
 	}
 
 	return nil

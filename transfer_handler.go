@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/touilleio/alephium-go-client"
-	"math/big"
 	"time"
 )
 
@@ -12,7 +12,8 @@ type transferHandler struct {
 	walletName        string
 	walletPassword    string
 	transferAddress   string
-	transferMaxAmount string
+	transferMinAmount alephium.ALF
+	transferMaxAmount alephium.ALF
 	transferFrequency time.Duration
 	immediate         bool
 	metrics           *metrics
@@ -20,14 +21,28 @@ type transferHandler struct {
 }
 
 func newTransferHandler(alephiumClient *alephium.Client, walletName string, walletPassword string,
-	transferAddress string, transferMaxAmount string, transferFrequency time.Duration, immediate bool, metrics *metrics, log *logrus.Logger) (*transferHandler, error) {
+	transferAddress string, transferMinAmount string, transferMaxAmount string, transferFrequency time.Duration, immediate bool, metrics *metrics, log *logrus.Logger) (*transferHandler, error) {
+
+	minAlf,ok := alephium.ALFromCoinString(transferMinAmount)
+	if !ok {
+		return nil, fmt.Errorf("transferMinAmount %s is not a valid ALF transfer amoount", transferMinAmount)
+	}
+
+	maxAlf,ok := alephium.ALFromCoinString(transferMaxAmount)
+	if !ok {
+		return nil, fmt.Errorf("transferMaxAmount %s is not a valid ALF transfer amoount", transferMaxAmount)
+	}
+	if maxAlf.Cmp(minAlf) < 0 {
+		return nil, fmt.Errorf("transferMaxAmount %s must be bigger or equals to transferMinAmount %s", transferMaxAmount, transferMinAmount)
+	}
 
 	handler := &transferHandler{
 		alephiumClient:    alephiumClient,
 		walletName:        walletName,
 		walletPassword:    walletPassword,
 		transferAddress:   transferAddress,
-		transferMaxAmount: transferMaxAmount,
+		transferMinAmount: minAlf,
+		transferMaxAmount: maxAlf,
 		transferFrequency: transferFrequency,
 		immediate:         immediate,
 		metrics:           metrics,
@@ -96,55 +111,43 @@ func (h *transferHandler) transfer() error {
 		}
 		amount := getAmount(address, walletBalances.Balances)
 		h.log.Debugf("address %s, amount %s", address, amount)
-		if amount != "" {
-			roundAmount := roundAmount(amount, h.transferMaxAmount)
-			h.log.Debugf("%s, %s, %s", address, amount, roundAmount)
-			if roundAmount != "" {
-				tx, err := h.alephiumClient.Transfer(wallet.Name, h.transferAddress, roundAmount)
-				if err != nil {
-					h.log.Debugf("Got an error calling transfer. Err = %v", err)
-					return err
-				}
-				h.log.Debugf("New tx %s,%d->%d of %s from %s to %s", tx.TransactionId, tx.FromGroup, tx.ToGroup,
-					roundAmount, address, h.transferAddress)
-			}
+		if amount.Amount == nil {
+			continue
 		}
+		roundAmount := roundAmount(amount, h.transferMinAmount, h.transferMaxAmount)
+		h.log.Debugf("%s, %s, %s", address, amount, roundAmount)
+		if roundAmount.Amount == nil {
+			continue
+		}
+		tx, err := h.alephiumClient.Transfer(wallet.Name, h.transferAddress, roundAmount)
+		if err != nil {
+			h.log.Debugf("Got an error calling transfer. Err = %v", err)
+			return err
+		}
+		h.log.Debugf("New tx %s,%d->%d of %s from %s to %s", tx.TransactionId, tx.FromGroup, tx.ToGroup,
+				roundAmount, address, h.transferAddress)
 	}
 	return nil
 }
 
-func getAmount(address string, balances []alephium.AddressBalance) string {
+func getAmount(address string, balances []alephium.AddressBalance) alephium.ALF {
 	for _, b := range balances {
 		if b.Address == address {
 			return b.Balance
 		}
 	}
-	return ""
+	return alephium.ALF{}
 }
 
-var (
-	OneALP      = "1000000000000000000"
-	TwoALP      = "2000000000000000000"
-	TenALP      = "10000000000000000000"
-	HundredALP  = "100000000000000000000"
-	ThousandALP = "1000000000000000000000"
-	two         = big.NewInt(2)
-)
-
-func roundAmount(amount string, txAmount string) string {
-	balance, ok := new(big.Int).SetString(amount, 10)
-	if !ok {
-		return ""
-	}
-	limit, _ := new(big.Int).SetString(TenALP, 10)
-	if balance.Cmp(limit) > 0 {
-		limit = limit.Div(limit, two).Neg(limit)
-		balance.Add(balance, limit)
-		alp, _ := new(big.Int).SetString(txAmount, 10)
-		if balance.Cmp(alp) > 0 {
-			return alp.Text(10)
+func roundAmount(amount alephium.ALF, txMinAmount alephium.ALF, txMaxAmount alephium.ALF) alephium.ALF {
+	twiceMinAmount := txMinAmount.Multiply(2)
+	if amount.Cmp(twiceMinAmount) >= 0 {
+		txAmount := amount.Subtract(txMinAmount)
+		if txAmount.Cmp(txMaxAmount) > 0 {
+			return txMaxAmount
+		} else {
+			return txAmount
 		}
-		return balance.Text(10)
 	}
-	return ""
+	return alephium.ALF{}
 }

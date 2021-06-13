@@ -52,6 +52,7 @@ services:
 | `WALLET_PASSWORD` | `Default-Password-1234` | Password to unlock the miner wallet |
 | `WALLET_MNEMONIC` | _optional_ | Mnemonic to restore (create) the wallet if it does not exist. Random mnemonic will be generated if not set |
 | `WALLET_MNEMONIC_PASSPHRASE` | _optional_ | A passphrase associated with the mnemonic, if any |
+| `TRANSFER_MIN_AMOUNT` | 5000000000000000000 (5 ALF) | Min amount to transfer at once. It also count as the amount reserved for the gas fee, i.e. if wallet contains 12 ALF, 5 a kept and only 7 are transferred |
 | `TRANSFER_MAX_AMOUNT` | 50000000000000000000 (50 ALF) | Max amount to transfer at once. |
 | `TRANSFER_ADDRESS` | _mandatory_ | Address to transfer the mining rewards to. If none provided, no transfer is performed. Double check you're sending the funds to the right address !! |
 | `TRANSFER_FREQUENCY` | `15m` | Frequency at which funds are transferred |

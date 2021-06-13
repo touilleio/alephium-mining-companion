@@ -1,6 +1,13 @@
 Alephium Mining Sidecar Changelog
 ====
 
+# Version v1.2.0
+
+## Improvements
+
+- Add `TRANSFER_MIN_AMOUNT` configuration option
+- Bump alephium-go-client dependency and refactor to use AFL manipulation module
+
 # Version v1.1.0
 
 ## Improvements
