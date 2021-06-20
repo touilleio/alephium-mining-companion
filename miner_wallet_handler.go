@@ -4,6 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/touilleio/alephium-go-client"
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -130,7 +131,7 @@ func (h *miningHandler) createAndUnlockWallet() (alephium.WalletInfo, error) {
 
 func (h *miningHandler) updateMinersAddresses() error {
 	minerAddresses, err := h.alephiumClient.GetMinersAddresses()
-	if err != nil {
+	if err != nil && !strings.HasPrefix(err.Error(), "Miner addresses are not set up"){
 		h.log.Debugf("Got an error calling miners addresses. Err = %v", err)
 		return err
 	}

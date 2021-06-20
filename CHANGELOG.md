@@ -1,6 +1,12 @@
 Alephium Mining Sidecar Changelog
 ====
 
+# Version v1.2.1
+
+## Fix
+
+- Followup change in miner addresses behaviour
+
 # Version v1.2.0
 
 ## Improvements
