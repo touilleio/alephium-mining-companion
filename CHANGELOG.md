@@ -1,6 +1,12 @@
 Alephium Mining Sidecar Changelog
 ====
 
+# Version v1.3.0
+
+## Fix
+
+- Followup change in coinbase lockup time
+
 # Version v1.2.1
 
 ## Fix
