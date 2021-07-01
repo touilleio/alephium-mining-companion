@@ -8,6 +8,6 @@ require (
 	github.com/prometheus/client_golang v1.7.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/sqooba/go-common v0.0.0-20210312063917-35b2ebfb97ab
-	github.com/touilleio/alephium-go-client v0.0.0-20210625092728-9a97f5a11f03
+	github.com/touilleio/alephium-go-client v0.0.0-20210701123300-9f3222e7975e
 	golang.org/x/sys v0.0.0-20210521090106-6ca3eb03dfc2 // indirect
 )

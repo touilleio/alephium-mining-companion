@@ -1,6 +1,12 @@
 Alephium Mining Sidecar Changelog
 ====
 
+# Version v1.4.0
+
+## Improvements
+
+- Follow up API name change of v0.8.2
+
 # Version v1.3.0
 
 ## Fix
