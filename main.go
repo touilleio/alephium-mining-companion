@@ -34,6 +34,7 @@ type envConfig struct {
 	TransferFrequency        time.Duration `envconfig:"TRANSFER_FREQUENCY" default:"15m"`
 	PrintMnemonic            bool          `envconfig:"PRINT_MNEMONIC" default:"false"`
 	ImmediateTransfer        bool          `envconfig:"IMMEDIATE_TRANSFER" default:"false"`
+	StartMining              bool          `envconfig:"START_MINING" default:"true"`
 
 	MetricsNamespace string `envconfig:"METRICS_NAMESPACE" default:"alephium"`
 	MetricsSubsystem string `envconfig:"METRICS_SUBSYSTEM" default:"miningsidecar"`
@@ -100,7 +101,7 @@ func main() {
 	}
 
 	miningHandler, err := newMiningHandler(alephiumClient, env.WalletName, env.WalletPassword,
-		env.WalletMnemonic, env.WalletMnemonicPassphrase, env.PrintMnemonic, log)
+		env.WalletMnemonic, env.WalletMnemonicPassphrase, env.PrintMnemonic, env.StartMining, log)
 	if err != nil {
 		log.Fatalf("Got an error while creating the wallet handler. Err = %v", err)
 	}

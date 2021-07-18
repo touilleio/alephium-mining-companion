@@ -15,11 +15,12 @@ type miningHandler struct {
 	walletMnemonic           string
 	walletMnemonicPassphrase string
 	printMnemonic            bool
+	startMining              bool
 	log                      *logrus.Logger
 }
 
 func newMiningHandler(alephiumClient *alephium.Client, walletName string, walletPassword string,
-	walletMnemonic string, walletMnemonicPassphrase string, printMnemonic bool,
+	walletMnemonic string, walletMnemonicPassphrase string, printMnemonic bool, startMining bool,
 	log *logrus.Logger) (*miningHandler, error) {
 
 	handler := &miningHandler{
@@ -29,6 +30,7 @@ func newMiningHandler(alephiumClient *alephium.Client, walletName string, wallet
 		walletMnemonic:           walletMnemonic,
 		walletMnemonicPassphrase: walletMnemonicPassphrase,
 		printMnemonic:            printMnemonic,
+		startMining:              startMining,
 		log:                      log,
 	}
 
@@ -164,7 +166,7 @@ func (h *miningHandler) waitForNodeInSyncAndStartMining() error {
 	}
 
 	nodeInfo, err := h.alephiumClient.GetNodeInfos()
-	if !nodeInfo.IsMining {
+	if !nodeInfo.IsMining && h.startMining {
 		h.log.Infof("Node %s is ready to mine, starting the mining now.", h.alephiumClient)
 
 		_, err = h.alephiumClient.StartMining()
@@ -173,7 +175,7 @@ func (h *miningHandler) waitForNodeInSyncAndStartMining() error {
 			return err
 		}
 	} else {
-		h.log.Debugf("Node is already mining, doing nothing.")
+		h.log.Debugf("Node is already mining (or doesn't need too), doing nothing.")
 	}
 
 	return nil
@@ -187,7 +189,6 @@ func (h *miningHandler) ensureMiningWalletAndNodeMining() error {
 			h.log.Fatalf("Got an error while updating miners addresses. Err = %v", err)
 			return err
 		}
-
 		err = h.waitForNodeInSyncAndStartMining()
 		if err != nil {
 			h.log.Fatalf("Got an error while waiting for the node to be in sync with peers. Err = %v", err)
