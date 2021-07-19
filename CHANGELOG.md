@@ -1,6 +1,12 @@
 Alephium Mining Sidecar Changelog
 ====
 
+# Version v1.5.0
+
+## Improvements
+
+- Adds `START_MINING` option, telling whether or not to start local mining. Useful when running external miner (brought by v0.8.5)
+
 # Version v1.4.0
 
 ## Improvements
