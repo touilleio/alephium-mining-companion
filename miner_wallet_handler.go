@@ -65,21 +65,13 @@ func hasSameAddresses(minerAddresses alephium.MinersAddresses, walletAddresses a
 
 func (h *miningHandler) createAndUnlockWallet() (alephium.WalletInfo, error) {
 
-	var wallet alephium.WalletInfo
+	// Initialize wallet to locked, unlocking twice doesn't hurt much.
+	wallet := alephium.WalletInfo{Wallet: alephium.Wallet{Name: h.walletName}, Locked: true}
 
-	var walletFound bool
-	wallets, err := h.alephiumClient.GetWallets()
+	walletFound, err := h.alephiumClient.CheckWalletExist(h.walletName)
 	if err != nil {
-		h.log.Debugf("Got an error calling wallets endpoint %s. Err = %v", h.alephiumClient, err)
+		h.log.Debugf("Got an error calling CheckWalletExist endpoint %s. Err = %v", h.alephiumClient, err)
 		return wallet, err
-	}
-
-	for _, w := range wallets {
-		if w.Name == h.walletName {
-			wallet = w
-			walletFound = true
-			break
-		}
 	}
 
 	if !walletFound {
@@ -117,13 +109,13 @@ func (h *miningHandler) createAndUnlockWallet() (alephium.WalletInfo, error) {
 	}
 
 	if wallet.Locked {
-		ok, err := h.alephiumClient.UnlockWallet(wallet.Name, h.walletPassword)
+		ok, err := h.alephiumClient.UnlockWallet(h.walletName, h.walletPassword)
 		if err != nil {
-			h.log.Debugf("Got an error while unlocking the wallet %s. Err = %v", wallet.Name, err)
+			h.log.Debugf("Got an error while unlocking the wallet %s. Err = %v", h.walletName, err)
 			return wallet, err
 		}
 		if !ok {
-			h.log.Debugf("Unable to unlock the wallet %s, please make sure the provided password is correct and retry.", wallet.Name)
+			h.log.Debugf("Unable to unlock the wallet %s, please make sure the provided password is correct and retry.", h.walletName)
 			return wallet, err
 		}
 	}
