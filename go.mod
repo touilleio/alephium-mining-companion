@@ -1,4 +1,4 @@
-module github.com/touilleio/alephium-mining-sidecar
+module github.com/touilleio/alephium-mining-companion
 
 go 1.15
 

@@ -1,7 +1,7 @@
-Alephium Mining Sidecar
+Alephium Mining Companion
 ====
 
-This project is a sidecar for Alephium full nodes, providing some convenience features
+This project is a companion for Alephium full nodes, providing some convenience features
 when enabling mining:
 
 1. Creates a mining wallet if none exists. 
@@ -13,7 +13,7 @@ when enabling mining:
    on a fixed frequency (hourly, daily, ...). Note that the wallet
    can be created anywhere as long as it's a valid Alephium address
 
-Sidecar means it needs to run alongside an Alephium full node,
+Companion means it needs to run alongside an Alephium full node,
 and particularly have REST connectivity to it (default port 12973)
 
 ![mining-sidecar](alephium-mining.png)
@@ -29,7 +29,7 @@ Docker-compose is a good way of running the side, assuming the
 version: "3"
 services:
   mining-sidecar:
-    image: touilleio/alephium-mining-sidecar:v1
+    image: touilleio/alephium-mining-companion:v2
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -48,7 +48,7 @@ services:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `ALEPHIUM_ENDPOINT` | `http://alephium:12973` | REST URI of your Alephium node. Mind localhost in a docker container point to the docker container, not the host itself. |
-| `WALLET_NAME` | `mining-sidecar-wallet-1` | Name of the miner wallet |
+| `WALLET_NAME` | `mining-companion-wallet-1` | Name of the miner wallet |
 | `WALLET_PASSWORD` | `Default-Password-1234` | Password to unlock the miner wallet |
 | `WALLET_MNEMONIC` | _optional_ | Mnemonic to restore (create) the wallet if it does not exist. Random mnemonic will be generated if not set |
 | `WALLET_MNEMONIC_PASSPHRASE` | _optional_ | A passphrase associated with the mnemonic, if any |
@@ -61,14 +61,14 @@ services:
 
 ## Docker
 
-Replace `T123456789012345678901234567890123456789012345` below with your own wallet address!
+Replace `123456789012345678901234567890123456789012345` below with your own wallet address!
 
 ```
-docker run -it --rm --link alephium:alephium -e TRANSFER_ADDRESS=T123456789012345678901234567890123456789012345 touilleio/alephium-mining-sidecar:v1
+docker run -it --rm --link alephium:alephium -e TRANSFER_ADDRESS=123456789012345678901234567890123456789012345 touilleio/alephium-mining-companion:v2
 ```
 
 As a reminder, running a Alephium full node looks like the following:
 
 ```
-docker run -it --rm --name alephium -p 12973:12973 touilleio/alephium:v0.7.8
+docker run -it --rm --name alephium -p 12973:12973 alephium/alephium:v0.9.0
 ```

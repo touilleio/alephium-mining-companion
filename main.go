@@ -24,7 +24,7 @@ type envConfig struct {
 	LogLevel string `envconfig:"LOG_LEVEL" default:"debug"`
 
 	AlephiumEndpoint         string        `envconfig:"ALEPHIUM_ENDPOINT" default:"http://alephium:12973"`
-	WalletName               string        `envconfig:"WALLET_NAME" default:"mining-sidecar-wallet-1"`
+	WalletName               string        `envconfig:"WALLET_NAME" default:"mining-companion-wallet-1"`
 	WalletPassword           string        `envconfig:"WALLET_PASSWORD" default:"Default-Password-1234"`
 	WalletMnemonic           string        `envconfig:"WALLET_MNEMONIC" default:""`
 	WalletMnemonicPassphrase string        `envconfig:"WALLET_MNEMONIC_PASSPHRASE" default:""`
@@ -37,7 +37,7 @@ type envConfig struct {
 	StartMining              bool          `envconfig:"START_MINING" default:"true"`
 
 	MetricsNamespace string `envconfig:"METRICS_NAMESPACE" default:"alephium"`
-	MetricsSubsystem string `envconfig:"METRICS_SUBSYSTEM" default:"miningsidecar"`
+	MetricsSubsystem string `envconfig:"METRICS_SUBSYSTEM" default:"miningcompanion"`
 	MetricsPath      string `envconfig:"METRICS_PATH" default:"/metrics"`
 }
 
@@ -47,7 +47,7 @@ const (
 
 func main() {
 
-	log.Println("alephium-mining-sidecar application is initializing...")
+	log.Println("Alephium-mining-companion application is initializing...")
 	log.Printf("Version    : %s", version.Version)
 	log.Printf("Commit     : %s", version.GitCommit)
 	log.Printf("Build date : %s", version.BuildDate)

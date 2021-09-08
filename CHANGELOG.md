@@ -1,5 +1,9 @@
-Alephium Mining Sidecar Changelog
+Alephium Mining Companion Changelog
 ====
+
+# Version v2.0.0
+
+- Rename mining-sidecar to mining-companion
 
 # Version v1.5.1
 
