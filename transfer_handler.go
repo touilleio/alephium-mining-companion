@@ -126,6 +126,7 @@ func (h *transferHandler) transfer() error {
 			h.log.Debugf("Got an error calling transfer. Err = %v", err)
 			return err
 		}
+		h.metrics.txAmount.Add(roundAmount.FloatALF())
 		h.log.Infof("New tx %s,%d->%d of %s from %s to %s", tx.TransactionId, tx.FromGroup, tx.ToGroup,
 			roundAmount.PrettyString(), address, h.transferAddress)
 	}

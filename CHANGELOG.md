@@ -1,6 +1,12 @@
 Alephium Mining Companion Changelog
 ====
 
+# Version v2.1.0
+
+## Improvements
+
+- Expose metrics of number of amount transferred
+
 # Version v2.0.0
 
 - Rename mining-sidecar to mining-companion

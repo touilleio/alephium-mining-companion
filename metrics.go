@@ -9,6 +9,7 @@ import (
 
 type metrics struct {
 	transferRun prometheus.Counter
+	txAmount prometheus.Counter
 }
 
 func initPrometheus(env envConfig, mux *http.ServeMux) *metrics {
@@ -17,6 +18,13 @@ func initPrometheus(env envConfig, mux *http.ServeMux) *metrics {
 	m.transferRun = promauto.NewCounter(prometheus.CounterOpts{
 		Name:      "transfer_runs_count",
 		Help:      "Number of transfer runs",
+		Namespace: env.MetricsNamespace,
+		Subsystem: env.MetricsSubsystem,
+	})
+
+	m.txAmount = promauto.NewCounter(prometheus.CounterOpts{
+		Name:      "transfer_amount_total",
+		Help:      "Amount transferred",
 		Namespace: env.MetricsNamespace,
 		Subsystem: env.MetricsSubsystem,
 	})
