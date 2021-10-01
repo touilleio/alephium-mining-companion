@@ -1,6 +1,14 @@
 Alephium Mining Companion Changelog
 ====
 
+# Version v3.0.0
+
+## Behavior changes
+
+- START_MINING has be set to `false` by default, meaning the mining-companion is setting the mining addresses,
+  but does not start the full node mining, since this feature is deprecated in favor of the 
+  [CPU miner](https://github.com/alephium/cpu-miner)
+
 # Version v2.1.0
 
 ## Improvements

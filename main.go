@@ -34,7 +34,7 @@ type envConfig struct {
 	TransferFrequency        time.Duration `envconfig:"TRANSFER_FREQUENCY" default:"15m"`
 	PrintMnemonic            bool          `envconfig:"PRINT_MNEMONIC" default:"false"`
 	ImmediateTransfer        bool          `envconfig:"IMMEDIATE_TRANSFER" default:"false"`
-	StartMining              bool          `envconfig:"START_MINING" default:"true"`
+	StartMining              bool          `envconfig:"START_MINING" default:"false"`
 
 	MetricsNamespace string `envconfig:"METRICS_NAMESPACE" default:"alephium"`
 	MetricsSubsystem string `envconfig:"METRICS_SUBSYSTEM" default:"miningcompanion"`

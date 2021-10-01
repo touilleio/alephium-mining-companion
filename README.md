@@ -58,17 +58,18 @@ services:
 | `TRANSFER_FREQUENCY` | `15m` | Frequency at which funds are transferred |
 | `PRINT_MNEMONIC` | `true` | If true and a wallet is created without pre-set mnemonic (`WALLET_MNEMONIC` option above), the randomly generate mnemonic is printed out. This is a sensitive information, use it with caution! |
 | `IMMEDIATE_TRANSFER` | `false` | If set to true, a transfer is sent at the start of the container, without waiting for `TRANSFER_FREQUENCY` initial time |
+| `START_MINING` | `false` | If set to true, the mining machinery built-in the broker will start mining. This is disabled by default and the dedicated, more efficient [CPU miner](https://github.com/alephium/cpu-miner) is recommended for mining as the time of writing |
 
 ## Docker
 
 Replace `123456789012345678901234567890123456789012345` below with your own wallet address!
 
 ```
-docker run -it --rm --link alephium:alephium -e TRANSFER_ADDRESS=123456789012345678901234567890123456789012345 touilleio/alephium-mining-companion:v2
+docker run -it --rm --link alephium:alephium -e TRANSFER_ADDRESS=123456789012345678901234567890123456789012345 touilleio/alephium-mining-companion:v3
 ```
 
 As a reminder, running a Alephium full node looks like the following:
 
 ```
-docker run -it --rm --name alephium -p 12973:12973 alephium/alephium:v0.9.0
+docker run -it --rm --name alephium -p 12973:12973 alephium/alephium:v0.10.2
 ```
