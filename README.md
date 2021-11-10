@@ -28,22 +28,26 @@ Docker-compose is a good way of running the side, assuming the
 ```
 version: "3"
 services:
-  mining-sidecar:
-    image: touilleio/alephium-mining-companion:v2
+  mining-companion:
+    image: touilleio/alephium-mining-companion:v5
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     environment:
+      - ALEPHIUM_ENDPOINT=http://broker:12973
       - LOG_LEVEL=debug
-      # provided via .env file, miningWalletName=...
-      - WALLET_NAME=$miningWalletName 
-      # miningWalletPassword=... in .env file
+      - WALLET_NAME=$miningWalletName
       - WALLET_PASSWORD=$miningWalletPassword
-      # miningTransferAddress=... in .env file
+      - WALLET_MNEMONIC=$miningWalletMnemonic
       - TRANSFER_ADDRESS=$miningTransferAddress
-    labels:
-      - org.label-schema.group=alephium
+      - TRANSFER_FREQUENCY=5m
+      - TRANSFER_MIN_AMOUNT=5000000000000000000
+      - TRANSFER_MAX_AMOUNT=100000000000000000000
+      - IMMEDIATE_TRANSFER=true
+      - START_MINING=false
 ```
+with variables `miningWalletName`, `miningWalletPassword`, `miningWalletMnemonic` and `miningTransferAddress`
+in a `.env` file in  the same folder than the `docker-compose.yml`.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
