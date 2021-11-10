@@ -1,6 +1,18 @@
 Alephium Mining Companion Changelog
 ====
 
+# Version v5.0.0
+
+## Breaking changes
+
+- Follow up changes in v1.0.0 (mainnet)
+
+# Version v4.0.0
+
+## Breaking changes
+
+- Follow up changes in v0.11.0
+
 # Version v3.0.0
 
 ## Behavior changes

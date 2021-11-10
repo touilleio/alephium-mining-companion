@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/sirupsen/logrus"
 	"github.com/touilleio/alephium-go-client"
 	"math/rand"
@@ -38,7 +39,7 @@ func newMiningHandler(alephiumClient *alephium.Client, walletName string, wallet
 }
 
 func getAddressesInRandomOrder(walletAddresses alephium.WalletAddresses) []string {
-	a := walletAddresses.Addresses
+	a := getAddressesAsString(walletAddresses.Addresses)
 	rand.Shuffle(len(a), func(i, j int) { a[i], a[j] = a[j], a[i] })
 	return a
 }
@@ -52,7 +53,7 @@ func hasSameAddresses(minerAddresses alephium.MinersAddresses, walletAddresses a
 	for _, minerAddress := range minerAddresses.Addresses {
 		found := false
 		for _, walletAddress := range walletAddresses.Addresses {
-			if walletAddress == minerAddress {
+			if walletAddress.Address == minerAddress {
 				found = true
 			}
 		}
@@ -140,7 +141,8 @@ func (h *miningHandler) updateMinersAddresses() error {
 		h.log.Debugf("Current miner addresses %v", minerAddresses)
 		h.log.Debugf("Mining wallet addresses %v", walletAddresses)
 
-		err = h.alephiumClient.UpdateMinersAddresses(walletAddresses.Addresses)
+
+		err = h.alephiumClient.UpdateMinersAddresses(getAddressesAsString(walletAddresses.Addresses))
 		if err != nil {
 			h.log.Debugf("Got an error calling update miners addresses. Err = %v", err)
 			return err
@@ -151,7 +153,7 @@ func (h *miningHandler) updateMinersAddresses() error {
 
 func (h *miningHandler) waitForNodeInSyncAndStartMining() error {
 
-	err := h.alephiumClient.WaitUntilSyncedWithAtLeastOnePeer()
+	_, err := h.alephiumClient.WaitUntilSyncedWithAtLeastOnePeer(context.Background())
 	if err != nil {
 		h.log.Debugf("Got an error waiting for the node to be in sync with peers. Err = %v", err)
 		return err
@@ -188,4 +190,12 @@ func (h *miningHandler) ensureMiningWalletAndNodeMining() error {
 		}
 	}
 	return nil
+}
+
+func getAddressesAsString(walletAddresses []alephium.WalletAddress) []string {
+	addresses := make([]string, 0, len(walletAddresses))
+	for _, wa := range walletAddresses {
+		addresses = append(addresses, wa.Address)
+	}
+	return addresses
 }

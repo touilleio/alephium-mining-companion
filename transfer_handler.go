@@ -12,8 +12,8 @@ type transferHandler struct {
 	walletName        string
 	walletPassword    string
 	transferAddress   string
-	transferMinAmount alephium.ALF
-	transferMaxAmount alephium.ALF
+	transferMinAmount alephium.ALPH
+	transferMaxAmount alephium.ALPH
 	transferFrequency time.Duration
 	immediate         bool
 	metrics           *metrics
@@ -21,16 +21,17 @@ type transferHandler struct {
 }
 
 func newTransferHandler(alephiumClient *alephium.Client, walletName string, walletPassword string,
-	transferAddress string, transferMinAmount string, transferMaxAmount string, transferFrequency time.Duration, immediate bool, metrics *metrics, log *logrus.Logger) (*transferHandler, error) {
+	transferAddress string, transferMinAmount string, transferMaxAmount string, transferFrequency time.Duration,
+	immediate bool, metrics *metrics, log *logrus.Logger) (*transferHandler, error) {
 
-	minAlf, ok := alephium.ALFromCoinString(transferMinAmount)
+	minAlf, ok := alephium.ALPHFromCoinString(transferMinAmount)
 	if !ok {
-		return nil, fmt.Errorf("transferMinAmount %s is not a valid ALF transfer amoount", transferMinAmount)
+		return nil, fmt.Errorf("transferMinAmount %s is not a valid ALPH transfer amoount", transferMinAmount)
 	}
 
-	maxAlf, ok := alephium.ALFromCoinString(transferMaxAmount)
+	maxAlf, ok := alephium.ALPHFromCoinString(transferMaxAmount)
 	if !ok {
-		return nil, fmt.Errorf("transferMaxAmount %s is not a valid ALF transfer amoount", transferMaxAmount)
+		return nil, fmt.Errorf("transferMaxAmount %s is not a valid ALPH transfer amoount", transferMaxAmount)
 	}
 	if maxAlf.Cmp(minAlf) < 0 {
 		return nil, fmt.Errorf("transferMaxAmount %s must be bigger or equals to transferMinAmount %s", transferMaxAmount, transferMinAmount)
@@ -104,7 +105,7 @@ func (h *transferHandler) transfer() error {
 			h.log.Warnf("Got a false while calling change active address. Not sure what this means yet...")
 		}
 
-		addressBalance, err := h.alephiumClient.GetAddressBalance(address)
+		addressBalance, err := h.alephiumClient.GetAddressBalance(address, -1)
 		if err != nil {
 			h.log.Debugf("Got an error while getting address balance. Err = %v", err)
 			return err
@@ -126,14 +127,14 @@ func (h *transferHandler) transfer() error {
 			h.log.Debugf("Got an error calling transfer. Err = %v", err)
 			return err
 		}
-		h.metrics.txAmount.Add(roundAmount.FloatALF())
+		h.metrics.txAmount.Add(roundAmount.FloatALPH())
 		h.log.Infof("New tx %s,%d->%d of %s from %s to %s", tx.TransactionId, tx.FromGroup, tx.ToGroup,
 			roundAmount.PrettyString(), address, h.transferAddress)
 	}
 	return nil
 }
 
-func roundAmount(amount alephium.ALF, txMinAmount alephium.ALF, txMaxAmount alephium.ALF) alephium.ALF {
+func roundAmount(amount alephium.ALPH, txMinAmount alephium.ALPH, txMaxAmount alephium.ALPH) alephium.ALPH {
 	twiceMinAmount := txMinAmount.Multiply(2)
 	if amount.Cmp(twiceMinAmount) >= 0 {
 		txAmount := amount.Subtract(txMinAmount)
@@ -143,5 +144,5 @@ func roundAmount(amount alephium.ALF, txMinAmount alephium.ALF, txMaxAmount alep
 			return txAmount
 		}
 	}
-	return alephium.ALF{}
+	return alephium.ALPH{}
 }
