@@ -1,6 +1,12 @@
 Alephium Mining Companion Changelog
 ====
 
+# Version v5.1.0
+
+## Improvement changes
+
+- Add metrics to monitor balance of miner and transfer addresses
+
 # Version v5.0.0
 
 ## Breaking changes

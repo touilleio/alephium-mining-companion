@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"github.com/kelseyhightower/envconfig"
@@ -127,8 +128,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("Got an error while waiting for the node to be in sync with peers. Err = %v", err)
 	}
-
 	go miningHandler.ensureMiningWalletAndNodeMining()
+
+	addressesToWatch := make([]string, 0, len(minerAddresses.Addresses) + 1)
+	for _, a := range minerAddresses.Addresses {
+		addressesToWatch = append(addressesToWatch, a)
+	}
+	if env.TransferAddress != "" {
+		addressesToWatch = append(addressesToWatch, env.TransferAddress)
+	}
+	addressBalanceStats, _ := newAddressBalanceStats(alephiumClient, addressesToWatch, metrics)
+	go addressBalanceStats.Stats(context.Background())
 
 	if env.TransferAddress != "" {
 		transferHandler, err := newTransferHandler(alephiumClient, wallet.Name, env.WalletPassword,
