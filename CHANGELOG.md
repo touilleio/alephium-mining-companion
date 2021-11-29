@@ -1,6 +1,12 @@
 Alephium Mining Companion Changelog
 ====
 
+# Version v5.1.1
+
+## Improvement changes
+
+- Add markers around the mnemonic to make it more visible
+
 # Version v5.1.0
 
 ## Improvement changes

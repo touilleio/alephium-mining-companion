@@ -1,5 +1,5 @@
 
-VERSION=v5.1.0
+VERSION=v5.1.1
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
@@ -7,7 +7,7 @@ GOTEST=$(GOCMD) test
 GOLINT=golangci-lint run
 BUILD_PLATFORM=linux/amd64
 PACKAGE_PLATFORM=$(BUILD_PLATFORM),linux/arm64,linux/arm/v7
-#PACKAGE_PLATFORM=$(BUILD_PLATFORM)
+PACKAGE_PLATFORM=$(BUILD_PLATFORM)
 VERSION_MAJOR=$(shell echo $(VERSION) | cut -f1 -d.)
 VERSION_MINOR=$(shell echo $(VERSION) | cut -f2 -d.)
 BINARY_NAME=alephium-mining-companion
