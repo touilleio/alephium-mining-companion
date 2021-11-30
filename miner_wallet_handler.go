@@ -98,7 +98,7 @@ func (h *miningHandler) createAndUnlockWallet() (alephium.WalletInfo, error) {
 				return wallet, err
 			}
 			if h.printMnemonic {
-				h.log.Infof("[SENSITIVE] The mnemonic of the newly created wallet is %s. This mnemonic will never be printed again, make sure you write them down somewhere!",
+				h.log.Infof("[SENSITIVE] The mnemonic of the newly created wallet is [ %s ]. This mnemonic will never be printed again, make sure you write them down somewhere!",
 					createdWallet.Mnemonic)
 			}
 			wallet, err = h.alephiumClient.GetWalletStatus(createdWallet.Name)
