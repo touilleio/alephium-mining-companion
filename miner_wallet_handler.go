@@ -110,7 +110,7 @@ func (h *miningHandler) createAndUnlockWallet() (alephium.WalletInfo, error) {
 	}
 
 	if wallet.Locked {
-		ok, err := h.alephiumClient.UnlockWallet(h.walletName, h.walletPassword)
+		ok, err := h.alephiumClient.UnlockWallet(h.walletName, h.walletPassword, h.walletMnemonicPassphrase)
 		if err != nil {
 			h.log.Debugf("Got an error while unlocking the wallet %s. Err = %v", h.walletName, err)
 			return wallet, err
