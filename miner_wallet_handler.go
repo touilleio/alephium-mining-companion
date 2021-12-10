@@ -39,7 +39,7 @@ func newMiningHandler(alephiumClient *alephium.Client, walletName string, wallet
 }
 
 func getAddressesInRandomOrder(walletAddresses alephium.WalletAddresses) []string {
-	a := getAddressesAsString(walletAddresses.Addresses)
+	a := alephium.GetAddressesAsString(walletAddresses.Addresses)
 	rand.Shuffle(len(a), func(i, j int) { a[i], a[j] = a[j], a[i] })
 	return a
 }
@@ -141,8 +141,7 @@ func (h *miningHandler) updateMinersAddresses() error {
 		h.log.Debugf("Current miner addresses %v", minerAddresses)
 		h.log.Debugf("Mining wallet addresses %v", walletAddresses)
 
-
-		err = h.alephiumClient.UpdateMinersAddresses(getAddressesAsString(walletAddresses.Addresses))
+		err = h.alephiumClient.UpdateMinersAddresses(alephium.GetAddressesAsString(walletAddresses.Addresses))
 		if err != nil {
 			h.log.Debugf("Got an error calling update miners addresses. Err = %v", err)
 			return err
@@ -190,12 +189,4 @@ func (h *miningHandler) ensureMiningWalletAndNodeMining() error {
 		}
 	}
 	return nil
-}
-
-func getAddressesAsString(walletAddresses []alephium.WalletAddress) []string {
-	addresses := make([]string, 0, len(walletAddresses))
-	for _, wa := range walletAddresses {
-		addresses = append(addresses, wa.Address)
-	}
-	return addresses
 }

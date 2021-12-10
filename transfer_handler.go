@@ -13,7 +13,6 @@ type transferHandler struct {
 	walletPassword    string
 	transferAddress   string
 	transferMinAmount alephium.ALPH
-	transferMaxAmount alephium.ALPH
 	transferFrequency time.Duration
 	immediate         bool
 	metrics           *metrics
@@ -21,20 +20,12 @@ type transferHandler struct {
 }
 
 func newTransferHandler(alephiumClient *alephium.Client, walletName string, walletPassword string,
-	transferAddress string, transferMinAmount string, transferMaxAmount string, transferFrequency time.Duration,
+	transferAddress string, transferMinAmount string, transferFrequency time.Duration,
 	immediate bool, metrics *metrics, log *logrus.Logger) (*transferHandler, error) {
 
 	minAlf, ok := alephium.ALPHFromCoinString(transferMinAmount)
 	if !ok {
 		return nil, fmt.Errorf("transferMinAmount %s is not a valid ALPH transfer amoount", transferMinAmount)
-	}
-
-	maxAlf, ok := alephium.ALPHFromCoinString(transferMaxAmount)
-	if !ok {
-		return nil, fmt.Errorf("transferMaxAmount %s is not a valid ALPH transfer amoount", transferMaxAmount)
-	}
-	if maxAlf.Cmp(minAlf) < 0 {
-		return nil, fmt.Errorf("transferMaxAmount %s must be bigger or equals to transferMinAmount %s", transferMaxAmount, transferMinAmount)
 	}
 
 	handler := &transferHandler{
@@ -43,7 +34,6 @@ func newTransferHandler(alephiumClient *alephium.Client, walletName string, wall
 		walletPassword:    walletPassword,
 		transferAddress:   transferAddress,
 		transferMinAmount: minAlf,
-		transferMaxAmount: maxAlf,
 		transferFrequency: transferFrequency,
 		immediate:         immediate,
 		metrics:           metrics,
@@ -77,7 +67,7 @@ func (h *transferHandler) transfer() error {
 
 	wallet, err := h.alephiumClient.GetWalletStatus(h.walletName)
 	if err != nil {
-		h.log.Debugf("Got an error calling wallet status after a restore, wallet restoration probably didn't work... Err = %v", err)
+		h.log.Debugf("Got an error calling wallet status, err = %v", err)
 		return err
 	}
 	if wallet.Locked {
@@ -116,20 +106,21 @@ func (h *transferHandler) transfer() error {
 		if amount.Amount == nil {
 			continue
 		}
-		roundAmount := roundAmount(amount, h.transferMinAmount, h.transferMaxAmount)
-		if roundAmount.Amount == nil {
+		if amount.Cmp(h.transferMinAmount) < 0 {
+			h.log.Debugf("Available amount %s is not above the threshold %s", amount.PrettyString(), h.transferMinAmount.PrettyString())
 			continue
 		}
-		h.log.Debugf("Will transfer from address %s, with available amount %s, effective rounded amount %s", address, amount.PrettyString(), roundAmount.PrettyString())
 
-		tx, err := h.alephiumClient.Transfer(wallet.Name, h.transferAddress, roundAmount)
+		h.log.Debugf("Will transfer all available (not locked) amount ~%s from address %s to %s", amount.PrettyString(), address, h.transferAddress)
+
+		tx, err := h.alephiumClient.SweepAll(wallet.Name, h.transferAddress)
 		if err != nil {
 			h.log.Debugf("Got an error calling transfer. Err = %v", err)
 			return err
 		}
-		h.metrics.txAmount.Add(roundAmount.FloatALPH())
-		h.log.Infof("New tx %s,%d->%d of %s from %s to %s", tx.TransactionId, tx.FromGroup, tx.ToGroup,
-			roundAmount.PrettyString(), address, h.transferAddress)
+		h.metrics.txAmount.Add(amount.FloatALPH())
+		h.log.Infof("New tx %s,%d->%d of ~%s from %s to %s", tx.TransactionId, tx.FromGroup, tx.ToGroup,
+			amount.PrettyString(), address, h.transferAddress)
 	}
 	return nil
 }
