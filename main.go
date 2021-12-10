@@ -141,7 +141,7 @@ func main() {
 
 	if env.TransferAddress != "" {
 		transferHandler, err := newTransferHandler(alephiumClient, wallet.Name, env.WalletPassword,
-			env.TransferAddress, env.TransferMinAmount, env.TransferFrequency,
+			env.WalletMnemonicPassphrase, env.TransferAddress, env.TransferMinAmount, env.TransferFrequency,
 			env.ImmediateTransfer, metrics, log)
 		if err != nil {
 			log.Fatalf("Got an error while instanciating the transfer handler. Err = %v", err)

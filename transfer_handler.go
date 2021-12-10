@@ -8,19 +8,20 @@ import (
 )
 
 type transferHandler struct {
-	alephiumClient    *alephium.Client
-	walletName        string
-	walletPassword    string
-	transferAddress   string
-	transferMinAmount alephium.ALPH
-	transferFrequency time.Duration
-	immediate         bool
-	metrics           *metrics
-	log               *logrus.Logger
+	alephiumClient     *alephium.Client
+	walletName         string
+	walletPassword     string
+	mnemonicPassphrase string
+	transferAddress    string
+	transferMinAmount  alephium.ALPH
+	transferFrequency  time.Duration
+	immediate          bool
+	metrics            *metrics
+	log                *logrus.Logger
 }
 
 func newTransferHandler(alephiumClient *alephium.Client, walletName string, walletPassword string,
-	transferAddress string, transferMinAmount string, transferFrequency time.Duration,
+	mnemonicPassphrase string, transferAddress string, transferMinAmount string, transferFrequency time.Duration,
 	immediate bool, metrics *metrics, log *logrus.Logger) (*transferHandler, error) {
 
 	minAlf, ok := alephium.ALPHFromCoinString(transferMinAmount)
@@ -29,15 +30,16 @@ func newTransferHandler(alephiumClient *alephium.Client, walletName string, wall
 	}
 
 	handler := &transferHandler{
-		alephiumClient:    alephiumClient,
-		walletName:        walletName,
-		walletPassword:    walletPassword,
-		transferAddress:   transferAddress,
-		transferMinAmount: minAlf,
-		transferFrequency: transferFrequency,
-		immediate:         immediate,
-		metrics:           metrics,
-		log:               log,
+		alephiumClient:     alephiumClient,
+		walletName:         walletName,
+		walletPassword:     walletPassword,
+		mnemonicPassphrase: mnemonicPassphrase,
+		transferAddress:    transferAddress,
+		transferMinAmount:  minAlf,
+		transferFrequency:  transferFrequency,
+		immediate:          immediate,
+		metrics:            metrics,
+		log:                log,
 	}
 
 	return handler, nil
@@ -71,7 +73,7 @@ func (h *transferHandler) transfer() error {
 		return err
 	}
 	if wallet.Locked {
-		_, err := h.alephiumClient.UnlockWallet(wallet.Name, h.walletPassword)
+		_, err := h.alephiumClient.UnlockWallet(wallet.Name, h.walletPassword, h.mnemonicPassphrase)
 		if err != nil {
 			h.log.Debugf("Got an error calling wallet unlock. Err = %v", err)
 			return err
