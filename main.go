@@ -29,8 +29,7 @@ type envConfig struct {
 	WalletPassword           string        `envconfig:"WALLET_PASSWORD" default:"Default-Password-1234"`
 	WalletMnemonic           string        `envconfig:"WALLET_MNEMONIC" default:""`
 	WalletMnemonicPassphrase string        `envconfig:"WALLET_MNEMONIC_PASSPHRASE" default:""`
-	TransferMinAmount        string        `envconfig:"TRANSFER_MIN_AMOUNT" default:"5000000000000000000"`
-	TransferMaxAmount        string        `envconfig:"TRANSFER_MAX_AMOUNT" default:"50000000000000000000"`
+	TransferMinAmount        string        `envconfig:"TRANSFER_MIN_AMOUNT" default:"20000000000000000000"`
 	TransferAddress          string        `envconfig:"TRANSFER_ADDRESS" default:""`
 	TransferFrequency        time.Duration `envconfig:"TRANSFER_FREQUENCY" default:"15m"`
 	PrintMnemonic            bool          `envconfig:"PRINT_MNEMONIC" default:"false"`
@@ -142,7 +141,7 @@ func main() {
 
 	if env.TransferAddress != "" {
 		transferHandler, err := newTransferHandler(alephiumClient, wallet.Name, env.WalletPassword,
-			env.TransferAddress, env.TransferMinAmount, env.TransferMaxAmount, env.TransferFrequency,
+			env.TransferAddress, env.TransferMinAmount, env.TransferFrequency,
 			env.ImmediateTransfer, metrics, log)
 		if err != nil {
 			log.Fatalf("Got an error while instanciating the transfer handler. Err = %v", err)

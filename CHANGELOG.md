@@ -1,6 +1,18 @@
 Alephium Mining Companion Changelog
 ====
 
+# Version v6.0.0
+
+## Breaking behaviour changes
+
+- Use `SweepAll` function instead of Transfer, once the `TRANSFER_MIN_AMOUNT` threshold is met per address
+- `TRANSFER_MAX_AMOUNT` is no longer used.
+- `TRANSFER_MIN_AMOUNT` default changed to 20 ALPH
+
+# Improvements
+
+- Use `alephium.GetAddressesAsString`
+
 # Version v5.1.1
 
 ## Improvement changes
