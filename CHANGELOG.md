@@ -6,6 +6,7 @@ Alephium Mining Companion Changelog
 ## Improvements
 
 - Add support for API key via `ALEPHIUM_API_KEY` environment variable
+- Remove no longer needed `START_MINING` environment variable and feature
 
 # Version v6.0.0
 

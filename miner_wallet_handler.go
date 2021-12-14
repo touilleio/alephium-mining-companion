@@ -16,12 +16,11 @@ type miningHandler struct {
 	walletMnemonic           string
 	walletMnemonicPassphrase string
 	printMnemonic            bool
-	startMining              bool
 	log                      *logrus.Logger
 }
 
 func newMiningHandler(alephiumClient *alephium.Client, walletName string, walletPassword string,
-	walletMnemonic string, walletMnemonicPassphrase string, printMnemonic bool, startMining bool,
+	walletMnemonic string, walletMnemonicPassphrase string, printMnemonic bool,
 	log *logrus.Logger) (*miningHandler, error) {
 
 	handler := &miningHandler{
@@ -31,7 +30,6 @@ func newMiningHandler(alephiumClient *alephium.Client, walletName string, wallet
 		walletMnemonic:           walletMnemonic,
 		walletMnemonicPassphrase: walletMnemonicPassphrase,
 		printMnemonic:            printMnemonic,
-		startMining:              startMining,
 		log:                      log,
 	}
 
@@ -150,27 +148,13 @@ func (h *miningHandler) updateMinersAddresses() error {
 	return nil
 }
 
-func (h *miningHandler) waitForNodeInSyncAndStartMining() error {
+func (h *miningHandler) waitForNodeInSync() error {
 
 	_, err := h.alephiumClient.WaitUntilSyncedWithAtLeastOnePeer(context.Background())
 	if err != nil {
 		h.log.Debugf("Got an error waiting for the node to be in sync with peers. Err = %v", err)
 		return err
 	}
-
-	nodeInfo, err := h.alephiumClient.GetNodeInfos()
-	if !nodeInfo.IsMining && h.startMining {
-		h.log.Infof("Node %s is ready to mine, starting the mining now.", h.alephiumClient)
-
-		_, err = h.alephiumClient.StartMining()
-		if err != nil {
-			h.log.Debugf("Got an error starting the mining. Err = %v", err)
-			return err
-		}
-	} else {
-		h.log.Debugf("Node is already mining (or doesn't need too), doing nothing.")
-	}
-
 	return nil
 }
 
@@ -182,7 +166,7 @@ func (h *miningHandler) ensureMiningWalletAndNodeMining() error {
 			h.log.Fatalf("Got an error while updating miners addresses. Err = %v", err)
 			return err
 		}
-		err = h.waitForNodeInSyncAndStartMining()
+		err = h.waitForNodeInSync()
 		if err != nil {
 			h.log.Fatalf("Got an error while waiting for the node to be in sync with peers. Err = %v", err)
 			return err
