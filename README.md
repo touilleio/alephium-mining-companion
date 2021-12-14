@@ -52,6 +52,7 @@ in a `.env` file in the same folder as the `docker-compose.yml`.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `ALEPHIUM_ENDPOINT` | `http://alephium:12973` | REST URI of your Alephium node. Mind localhost in a docker container point to the docker container, not the host itself. |
+| `ALEPHIUM_API_KEY` | _optional_ | API key to use to connect to `ALEPHIUM_ENDPOINT`. |
 | `WALLET_NAME` | `mining-companion-wallet-1` | Name of the miner wallet |
 | `WALLET_PASSWORD` | `Default-Password-1234` | Password to unlock the miner wallet |
 | `WALLET_MNEMONIC` | _optional_ | Mnemonic to restore (create) the wallet if it does not exist. Random mnemonic will be generated if not set |
