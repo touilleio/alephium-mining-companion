@@ -25,6 +25,7 @@ type envConfig struct {
 	LogLevel string `envconfig:"LOG_LEVEL" default:"debug"`
 
 	AlephiumEndpoint         string        `envconfig:"ALEPHIUM_ENDPOINT" default:"http://alephium:12973"`
+	AlephiumApiKey           string        `envconfig:"ALEPHIUM_API_KEY" default:""`
 	WalletName               string        `envconfig:"WALLET_NAME" default:"mining-companion-wallet-1"`
 	WalletPassword           string        `envconfig:"WALLET_PASSWORD" default:"Default-Password-1234"`
 	WalletMnemonic           string        `envconfig:"WALLET_MNEMONIC" default:""`
@@ -95,7 +96,7 @@ func main() {
 		log.Fatal(s.ListenAndServe())
 	}()
 
-	alephiumClient, err := alephium.New(env.AlephiumEndpoint, log)
+	alephiumClient, err := alephium.NewWithApiKey(env.AlephiumEndpoint, env.AlephiumApiKey, log)
 	if err != nil {
 		log.Fatalf("Got an error instantiating alephium client on %s. Err = %v", env.AlephiumEndpoint, err)
 	}

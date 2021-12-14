@@ -1,6 +1,12 @@
 Alephium Mining Companion Changelog
 ====
 
+# Version v6.1.0
+
+## Improvements
+
+- Add support for API key via `ALEPHIUM_API_KEY` environment variable
+
 # Version v6.0.0
 
 ## Breaking behaviour changes
@@ -9,7 +15,7 @@ Alephium Mining Companion Changelog
 - `TRANSFER_MAX_AMOUNT` is no longer used.
 - `TRANSFER_MIN_AMOUNT` default changed to 20 ALPH
 
-# Improvements
+## Improvements
 
 - Use `alephium.GetAddressesAsString`
 
