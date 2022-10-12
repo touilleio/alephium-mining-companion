@@ -4,13 +4,18 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	alephium "github.com/alephium/go-sdk"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/sirupsen/logrus"
 	"github.com/sqooba/go-common/healthchecks"
 	"github.com/sqooba/go-common/logging"
 	"github.com/sqooba/go-common/version"
-	"github.com/touilleio/alephium-go-client"
+	"golang.org/x/sync/errgroup"
 	"math/rand"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -90,14 +95,26 @@ func main() {
 	// Special endpoint to change the verbosity at runtime, i.e. curl -X PUT --data debug ...
 	logging.InitVerbosityHandler(log, http.DefaultServeMux)
 
-	s := http.Server{Addr: fmt.Sprint(":", env.Port)}
-	go func() {
-		log.Fatal(s.ListenAndServe())
-	}()
+	// errgroup will coordinate the many routines handling the API.
+	cancellableCtx, cancel := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(cancellableCtx)
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
-	alephiumClient, err := alephium.NewWithApiKey(env.AlephiumEndpoint, env.AlephiumApiKey, log)
+	s := http.Server{Addr: fmt.Sprint(":", env.Port)}
+	g.Go(s.ListenAndServe)
+
+	alephiumConfig := alephium.NewConfiguration()
+	alephiumConfig.Host = env.AlephiumEndpoint
+	if logging.IsDebugEnabled(log) {
+		alephiumConfig.Debug = true
+	}
+	if env.AlephiumApiKey != "" {
+		alephiumConfig.DefaultHeader["X-API-KEY"] = env.AlephiumApiKey
+	}
+	alephiumClient := alephium.NewAPIClient(alephiumConfig)
 	if err != nil {
-		log.Fatalf("Got an error instantiating alephium client on %s. Err = %v", env.AlephiumEndpoint, err)
+		log.WithError(err).Fatalf("Got an error instantiating alephium client on %s", env.AlephiumEndpoint)
 	}
 
 	miningHandler, err := newMiningHandler(alephiumClient, env.WalletName, env.WalletPassword,
@@ -106,55 +123,79 @@ func main() {
 		log.Fatalf("Got an error while creating the wallet handler. Err = %v", err)
 	}
 
-	wallet, err := miningHandler.createAndUnlockWallet()
+	wallet, err := miningHandler.createAndUnlockWallet(ctx, logrus.NewEntry(log))
 	if err != nil {
 		log.Fatalf("Got an error while creating and/or unlocking the wallet %s. Err = %v", env.WalletName, err)
 	}
 
-	err = miningHandler.updateMinersAddresses()
+	err = miningHandler.updateMinersAddresses(ctx, logrus.NewEntry(log))
 	if err != nil {
 		log.Fatalf("Got an error while updating miners addresses. Err = %v", err)
 	}
 
-	minerAddresses, err := alephiumClient.GetMinersAddresses()
+	minersAddressesReq := alephiumClient.MinersApi.GetMinersAddresses(ctx)
+	minersAddresses, _, err := minersAddressesReq.Execute()
 	if err != nil {
-		log.Fatalf("Got an error calling miners addresses. Err = %v", err)
+		log.WithError(err).Fatalf("Got an error calling miners addresses")
 	}
 	log.Infof("Mining wallet %s (with addresses %v) is ready to be used, now waiting for the node to become in sync if needed.",
-		wallet.Name, minerAddresses.Addresses)
+		wallet.WalletName, minersAddresses.Addresses)
 
-	err = miningHandler.waitForNodeInSync()
+	err = miningHandler.waitForNodeInSync(ctx, logrus.NewEntry(log))
 	if err != nil {
 		log.Fatalf("Got an error while waiting for the node to be in sync with peers. Err = %v", err)
 	}
-	go miningHandler.ensureMiningWalletAndNodeMining()
+	g.Go(func() error {
+		return miningHandler.ensureMiningWalletAndNodeMining(ctx, logrus.NewEntry(log))
+	})
 
-	addressesToWatch := make([]string, 0, len(minerAddresses.Addresses) + 1)
-	for _, a := range minerAddresses.Addresses {
+	addressesToWatch := make([]string, 0, len(minersAddresses.Addresses)+1)
+	for _, a := range minersAddresses.Addresses {
 		addressesToWatch = append(addressesToWatch, a)
 	}
 	if env.TransferAddress != "" {
 		addressesToWatch = append(addressesToWatch, env.TransferAddress)
 	}
 	addressBalanceStats, _ := newAddressBalanceStats(alephiumClient, addressesToWatch, metrics)
-	go addressBalanceStats.Stats(context.Background())
+	g.Go(func() error { return addressBalanceStats.Stats(ctx) })
 
 	if env.TransferAddress != "" {
-		transferHandler, err := newTransferHandler(alephiumClient, wallet.Name, env.WalletPassword,
+		transferHandler, err := newTransferHandler(alephiumClient, wallet.WalletName, env.WalletPassword,
 			env.WalletMnemonicPassphrase, env.TransferAddress, env.TransferMinAmount, env.TransferFrequency,
 			env.ImmediateTransfer, metrics, log)
 		if err != nil {
-			log.Fatalf("Got an error while instanciating the transfer handler. Err = %v", err)
+			log.WithError(err).Fatalf("Got an error while instanciating the transfer handler")
 		}
 
 		log.Infof("We will transfer to %s the mining reward every %s.", env.TransferAddress, env.TransferFrequency)
 
-		err = transferHandler.handle()
-		if err != nil {
-			log.Fatalf("Got an error while handling the transfer. Err = %v", err)
-		}
+		g.Go(func() error {
+			err := transferHandler.handle(ctx, logrus.NewEntry(log))
+			if err != nil {
+				log.WithError(err).Fatalf("Got an error while handling the transfer")
+			}
+			return err
+		})
 	} else {
 		log.Infof("No transfer address configure, no problem, job is done.")
+		cancel()
+	}
+
+	// Wait for any shutdown
+	select {
+	case <-signalChan:
+		log.Info("Shutdown signal received, exiting...")
+		cancel()
+		break
+	case <-ctx.Done():
+		log.Info("Group context is done, exiting...")
+		cancel()
+		break
+	}
+
+	err = ctx.Err()
+	if err != nil {
+		log.WithError(err).Fatal("Got an error from the error group context")
 	}
 
 	log.Infof("All good, stopping now.")

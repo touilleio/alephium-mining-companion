@@ -1,6 +1,11 @@
 Alephium Mining Companion Changelog
 ====
 
+# Version v7.0.0
+
+- Migrate to github.com/alephium/go-sdk
+- Use sweepAll function
+
 # Version v6.1.0
 
 ## Improvements

@@ -8,10 +8,11 @@ import (
 )
 
 type metrics struct {
-	transferRun prometheus.Counter
+	transferRun          prometheus.Counter
 	txAmount             prometheus.Counter
 	addressTotalBalance  *prometheus.GaugeVec
 	addressLockedBalance *prometheus.GaugeVec
+	addressUtxos         *prometheus.GaugeVec
 }
 
 func initPrometheus(env envConfig, mux *http.ServeMux) *metrics {
@@ -41,6 +42,13 @@ func initPrometheus(env envConfig, mux *http.ServeMux) *metrics {
 	m.addressLockedBalance = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name:      "locked_balance",
 		Help:      "Locked balance of the address",
+		Namespace: env.MetricsNamespace,
+		Subsystem: env.MetricsSubsystem,
+	}, []string{"address"})
+
+	m.addressUtxos = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name:      "utxos",
+		Help:      "Number of UTXOs of the address",
 		Namespace: env.MetricsNamespace,
 		Subsystem: env.MetricsSubsystem,
 	}, []string{"address"})

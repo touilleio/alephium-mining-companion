@@ -2,28 +2,28 @@ package main
 
 import (
 	"context"
+	alephium "github.com/alephium/go-sdk"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/touilleio/alephium-go-client"
 	"time"
 )
 
 type AddressBalanceStats struct {
-	alephiumClient *alephium.Client
-	addresses []string
-	metrics *metrics
+	alephiumClient *alephium.APIClient
+	addresses      []string
+	metrics        *metrics
 }
 
-func newAddressBalanceStats(alephiumClient *alephium.Client, addresses []string, metrics *metrics) (*AddressBalanceStats, error) {
+func newAddressBalanceStats(alephiumClient *alephium.APIClient, addresses []string, metrics *metrics) (*AddressBalanceStats, error) {
 	handler := &AddressBalanceStats{
 		alephiumClient: alephiumClient,
-		addresses: addresses,
-		metrics: metrics,
+		addresses:      addresses,
+		metrics:        metrics,
 	}
 	return handler, nil
 }
 
 func (h *AddressBalanceStats) Stats(ctx context.Context) error {
-	err := h.doStats()
+	err := h.doStats(ctx)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (h *AddressBalanceStats) Stats(ctx context.Context) error {
 			return nil
 		default:
 		}
-		err = h.doStats()
+		err = h.doStats(ctx)
 		if err != nil {
 			return err
 		}
@@ -41,14 +41,20 @@ func (h *AddressBalanceStats) Stats(ctx context.Context) error {
 	return nil
 }
 
-func (h *AddressBalanceStats) doStats() error {
+func (h *AddressBalanceStats) doStats(ctx context.Context) error {
 	for _, address := range h.addresses {
-		balance, err := h.alephiumClient.GetAddressBalance(address, -1)
+		addressBalanceReq := h.alephiumClient.AddressesApi.GetAddressesAddressBalance(ctx, address)
+		balance, _, err := addressBalanceReq.Execute()
 		if err != nil {
 			return err
 		}
-		h.metrics.addressTotalBalance.With(prometheus.Labels{"address": address}).Set(balance.Balance.FloatALPH())
-		h.metrics.addressLockedBalance.With(prometheus.Labels{"address": address}).Set(balance.LockedBalance.FloatALPH())
+		if addressBalance, ok := ALPHFromCoinString(balance.Balance); ok {
+			h.metrics.addressTotalBalance.With(prometheus.Labels{"address": address}).Set(addressBalance.FloatALPH())
+		}
+		if addressLockedBalance, ok := ALPHFromCoinString(balance.LockedBalance); ok {
+			h.metrics.addressLockedBalance.With(prometheus.Labels{"address": address}).Set(addressLockedBalance.FloatALPH())
+		}
+		h.metrics.addressUtxos.With(prometheus.Labels{"address": address}).Set(float64(balance.UtxoNum))
 	}
 	return nil
 }

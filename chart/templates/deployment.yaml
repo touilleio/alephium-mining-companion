@@ -1,0 +1,51 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mining-companion
+  name: mining-companion
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  selector:
+    matchLabels:
+      app: mining-companion
+  template:
+    metadata:
+      labels:
+        app: mining-companion
+    spec:
+      containers:
+        - image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
+          name: faucet
+          env:
+            - name: WALLET_NAME
+              value: {{ .Values.wallet.name | quote }}
+            - name: WALLET_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mining-companion-secrets
+                  key: WALLET_PASSWORD
+            - name: WALLET_MNEMONIC
+              valueFrom:
+                secretKeyRef:
+                  name: mining-companion-secrets
+                  key: WALLET_MNEMONIC
+            - name: WALLET_MNEMONIC_PASSPHRASE
+              valueFrom:
+                secretKeyRef:
+                  name: mining-companion-secrets
+                  key: WALLET_MNEMONIC_PASSPHRASE
+            - name: ALEPHIUM_ENDPOINT
+              value: "broker.alephium-broker-v18:12973"
+            - name: LOG_LEVEL
+              value: {{ .Values.log_level | quote }}
+            - name: TRANSFER_ADDRESS
+              value: {{ .Values.sweep_wallet | quote }}
+            - name: IMMEDIATE_TRANSFER
+              value: {{ .Values.immediate_transfer | quote }}
+            - name: TRANSFER_FREQUENCY
+              value: {{ .Values.transfer_frequency | quote }}
+          imagePullPolicy: Always
+      nodeSelector:
+        "alephium.org/tier": backend

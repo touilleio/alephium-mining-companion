@@ -1,0 +1,15 @@
+
+image:
+  repository: touilleio/alephium-mining-companion
+#  tag: v7.0.0 # optional, using .Chart.AppVersion if not set
+
+wallet:
+  name: "mining-wallet-01"
+  mnemonic: "a b c d"
+  mnemonic_passphrase: ""
+  password: "abcd"
+
+sweep_wallet: 1wxtF1t5gYFFUdDVWrMzdapwGdQ1MT8tu258onRXjCm3
+immediate_transfer: "true"
+transfer_frequency: "4h"
+log_level: debug
