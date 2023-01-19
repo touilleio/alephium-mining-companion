@@ -4,6 +4,7 @@ import (
 	"context"
 	alephium "github.com/alephium/go-sdk"
 	"github.com/sirupsen/logrus"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -172,14 +173,14 @@ func (h *miningHandler) ensureMiningWalletAndNodeMining(ctx context.Context, log
 
 func checkWalletExist(ctx context.Context, alephiumClient *alephium.APIClient, walletName string, log *logrus.Entry) (bool, error) {
 	walletNameRequest := alephiumClient.WalletsApi.GetWalletsWalletName(ctx, walletName)
-	_, _, err := walletNameRequest.Execute()
+	_, resp, err := walletNameRequest.Execute()
 
-	if err != nil && err.Error() != is404NotFound {
+	if err != nil && (resp == nil || resp.StatusCode != http.StatusNotFound) {
 		log.WithError(err).Debugf("Got an error while checking if the wallet %s exists", walletName)
 		return false, err
 	}
 
-	if err != nil && err.Error() == is404NotFound {
+	if err != nil && resp != nil && resp.StatusCode == http.StatusNotFound {
 		return false, nil
 	}
 

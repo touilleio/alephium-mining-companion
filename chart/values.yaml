@@ -9,6 +9,7 @@ wallet:
   mnemonic_passphrase: ""
   password: "abcd"
 
+broker_endpoint: "broker-1-az2.broker-v16:12973"
 sweep_wallet: 1wxtF1t5gYFFUdDVWrMzdapwGdQ1MT8tu258onRXjCm3
 immediate_transfer: "true"
 transfer_frequency: "4h"

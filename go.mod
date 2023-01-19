@@ -3,7 +3,7 @@ module github.com/touilleio/alephium-mining-companion
 go 1.19
 
 require (
-	github.com/alephium/go-sdk v0.0.0-20220919082855-4fb3b6e48fc7
+	github.com/alephium/go-sdk v0.0.0-20230119205417-bdf395245e04
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/prometheus/client_golang v1.13.0
 	github.com/sirupsen/logrus v1.8.1
