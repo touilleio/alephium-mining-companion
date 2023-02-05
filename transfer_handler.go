@@ -111,23 +111,11 @@ func (h *transferHandler) transfer(ctx context.Context, log *logrus.Entry) error
 				return err
 			}
 			txConfirmed = txStatus.Confirmed
+			time.Sleep(5 * time.Second)
 		}
-		h.log.Infof("New tx %s,%d->%d is now inculded in block %s!", tx.TxId, tx.FromGroup, tx.ToGroup, txConfirmed.BlockHash)
+		h.log.Infof("New tx %s,%d->%d is now included in block %s!", tx.TxId, tx.FromGroup, tx.ToGroup, txConfirmed.BlockHash)
 		// TODO: get block to find out the exact amount transferred to update counter consistently
 	}
 
 	return nil
-}
-
-func roundAmount(amount ALPH, txMinAmount ALPH, txMaxAmount ALPH) ALPH {
-	twiceMinAmount := txMinAmount.Multiply(2)
-	if amount.Cmp(twiceMinAmount) >= 0 {
-		txAmount := amount.Subtract(txMinAmount)
-		if txAmount.Cmp(txMaxAmount) > 0 {
-			return txMaxAmount
-		} else {
-			return txAmount
-		}
-	}
-	return ALPH{}
 }

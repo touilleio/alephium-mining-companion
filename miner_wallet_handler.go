@@ -192,9 +192,9 @@ func restoreWallet(ctx context.Context, alephiumClient *alephium.APIClient,
 	isMiner bool, log *logrus.Entry) (*alephium.WalletRestoreResult, error) {
 
 	walletRestore := alephium.NewWalletRestore(walletPassword, walletMnemonic, walletName)
-	walletRestore.IsMiner = ToBoolPtr(isMiner)
+	walletRestore.SetIsMiner(isMiner)
 	if walletMnemonicPassphrase != "" {
-		walletRestore.MnemonicPassphrase = &walletMnemonicPassphrase
+		walletRestore.SetMnemonicPassphrase(walletMnemonicPassphrase)
 	}
 	walletRestoreReq := alephiumClient.WalletsApi.PutWallets(ctx).WalletRestore(*walletRestore)
 	walletRestoreRes, _, err := walletRestoreReq.Execute()
@@ -210,9 +210,9 @@ func createWallet(ctx context.Context, alephiumClient *alephium.APIClient,
 	isMiner bool, log *logrus.Entry) (*alephium.WalletCreationResult, error) {
 
 	walletCreation := alephium.NewWalletCreation(walletPassword, walletName)
-	walletCreation.IsMiner = ToBoolPtr(isMiner)
+	walletCreation.SetIsMiner(isMiner)
 	if walletMnemonicPassphrase != "" {
-		walletCreation.MnemonicPassphrase = &walletMnemonicPassphrase
+		walletCreation.SetMnemonicPassphrase(walletMnemonicPassphrase)
 	}
 	walletCreationReq := alephiumClient.WalletsApi.PostWallets(ctx).WalletCreation(*walletCreation)
 	walletCreationRes, _, err := walletCreationReq.Execute()
@@ -223,21 +223,13 @@ func createWallet(ctx context.Context, alephiumClient *alephium.APIClient,
 	return walletCreationRes, nil
 }
 
-func ToBoolPtr(b bool) *bool {
-	return &b
-}
-
-const (
-	is404NotFound = "404 Not Found"
-)
-
 func unlockWallet(ctx context.Context, alephiumClient *alephium.APIClient,
 	walletName, walletPassword, walletMnemonicPassphrase string,
 	log *logrus.Entry) error {
 
 	walletUnlock := alephium.NewWalletUnlock(walletPassword)
 	if walletMnemonicPassphrase != "" {
-		walletUnlock.MnemonicPassphrase = &walletMnemonicPassphrase
+		walletUnlock.SetMnemonicPassphrase(walletMnemonicPassphrase)
 	}
 	walletUnlockReq := alephiumClient.WalletsApi.PostWalletsWalletNameUnlock(ctx, walletName).
 		WalletUnlock(*walletUnlock)
