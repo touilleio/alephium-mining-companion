@@ -1,5 +1,5 @@
 
-VERSION=v7.1.1
+VERSION=v7.1.2
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean

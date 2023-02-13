@@ -106,7 +106,7 @@ func main() {
 
 	alephiumConfig := alephium.NewConfiguration()
 	alephiumConfig.Host = env.AlephiumEndpoint
-	if logging.IsDebugEnabled(log) {
+	if log.Level >= logrus.TraceLevel {
 		alephiumConfig.Debug = true
 	}
 	if env.AlephiumApiKey != "" {

@@ -1,6 +1,10 @@
 Alephium Mining Companion Changelog
 ====
 
+# Version v7.1.2
+
+- Bump alephium/go-sdk to v1.6.3
+
 # Version v7.1.1
 
 - Bump alephium/go-sdk to v1.6.2

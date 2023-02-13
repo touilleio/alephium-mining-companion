@@ -42,6 +42,8 @@ github.com/alephium/go-sdk v0.0.0-20230119205417-bdf395245e04 h1:snKkeG/9Fc3MOHq
 github.com/alephium/go-sdk v0.0.0-20230119205417-bdf395245e04/go.mod h1:uWHQ8lbg2raDRlMWmsUCuvzJ6GIRFLHr3stR/TwglA4=
 github.com/alephium/go-sdk v0.0.0-20230130013956-c85ab2bc81a9 h1:/c4ss7G0mNglvreFTEJBffVSdIhhy/D6W16WPPMUHgk=
 github.com/alephium/go-sdk v0.0.0-20230130013956-c85ab2bc81a9/go.mod h1:uWHQ8lbg2raDRlMWmsUCuvzJ6GIRFLHr3stR/TwglA4=
+github.com/alephium/go-sdk v0.0.0-20230206042832-f7ec1fc14ec5 h1:gB7Hn6OcJrWlmvEezovbQUK++Jst7++dv2aUxzb7kvs=
+github.com/alephium/go-sdk v0.0.0-20230206042832-f7ec1fc14ec5/go.mod h1:uWHQ8lbg2raDRlMWmsUCuvzJ6GIRFLHr3stR/TwglA4=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
